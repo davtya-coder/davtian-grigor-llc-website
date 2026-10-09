@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Private black car and SUV service in Los Angeles. Reserve a 2025 BMW X5 or Chevrolet Suburban with Davtian Grigor LLC.">
+  <meta name="theme-color" content="#07090c">
+  <title>Davtian Grigor LLC | Los Angeles Black Car Service</title>
+  <script src="https://web.squarecdn.com/v1/square.js"></script>
+  <style>
+    :root {
+      --bg:#07090c; --panel:#11151b; --panel2:#171c23; --gold:#d6ad68;
+      --cream:#f7f2e8; --muted:#aab0b8; --line:rgba(255,255,255,.12);
+      --ok:#9bd3ad; --danger:#f4b1a9; --shadow:0 24px 70px rgba(0,0,0,.42);
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--cream); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.55; }
+    body.locked { overflow:hidden; }
+    a { color:inherit; }
+    button,input,select,textarea { font:inherit; }
+    button { cursor:pointer; }
+    .wrap { width:min(1180px,calc(100% - 32px)); margin:auto; }
+    .eyebrow { margin:0 0 10px; color:var(--gold); font-size:.78rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { max-width:840px; font-family:Georgia,serif; font-size:clamp(2.7rem,7vw,6.4rem); line-height:.95; letter-spacing:-.045em; }
+    h2 { font-family:Georgia,serif; font-size:clamp(2rem,4vw,3.8rem); line-height:1.02; letter-spacing:-.03em; }
+    h3 { font-size:1.28rem; }
+    .muted { color:var(--muted); }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:52px; padding:0 22px; border:1px solid transparent; border-radius:999px; text-decoration:none; font-weight:800; transition:.2s ease; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { background:var(--gold); color:#111; }
+    .btn-secondary { border-color:var(--line); background:rgba(7,9,12,.58); color:#fff; }
+    .btn-block { width:100%; }
+    header { position:fixed; inset:0 0 auto; z-index:30; border-bottom:1px solid var(--line); background:rgba(7,9,12,.82); backdrop-filter:blur(16px); }
+    nav { min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .brand { text-decoration:none; font-weight:900; letter-spacing:.01em; }
+    .brand small { display:block; color:var(--gold); font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; }
+    .navlinks { display:flex; align-items:center; gap:24px; }
+    .navlinks a { text-decoration:none; color:#d8dbe0; font-size:.92rem; }
+    .menu { display:none; background:none; border:0; color:#fff; font-size:1.4rem; }
+    .hero { min-height:860px; display:flex; align-items:flex-end; padding:150px 0 72px; position:relative; isolation:isolate; background:
+      linear-gradient(90deg,rgba(5,7,10,.96) 0%,rgba(5,7,10,.78) 43%,rgba(5,7,10,.18) 75%),
+      linear-gradient(0deg,#07090c 0%,transparent 35%),
+      radial-gradient(circle at 50% 45%, #26313d 0%, #151c24 45%, #090c10 100%); }
+    .hero::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(0deg,rgba(7,9,12,.92),transparent 38%); }
+    .hero-copy { max-width:820px; }
+    .hero-copy>p:not(.eyebrow) { max-width:620px; color:#d8dce2; font-size:1.08rem; }
+    .hero-actions { display:flex; gap:12px; flex-wrap:wrap; margin:28px 0 42px; }
+    .facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); max-width:760px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(7,9,12,.68); backdrop-filter:blur(12px); }
+    .fact { padding:18px; border-right:1px solid var(--line); }
+    .fact:last-child { border-right:0; }
+    .fact strong { display:block; color:#fff; font-size:1.05rem; }
+    .fact span { color:var(--muted); font-size:.83rem; }
+    section { padding:96px 0; }
+    .section-head { max-width:720px; margin-bottom:34px; }
+    .fleet { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .car { overflow:hidden; border:1px solid var(--line); border-radius:26px; background:linear-gradient(145deg,var(--panel2),var(--panel)); box-shadow:var(--shadow); transition:.22s ease; }
+    .car.selected { border-color:var(--gold); box-shadow:0 0 0 3px rgba(214,173,104,.14),var(--shadow); }
+    .car-visual { min-height:240px; display:grid; place-items:center; position:relative; background:
+      radial-gradient(circle at 75% 20%,rgba(214,173,104,.25),transparent 24%),
+      linear-gradient(145deg,#202733,#0e1218); }
+    .car-visual::before { content:""; width:72%; height:28%; border-radius:45% 55% 20% 20%/70% 70% 30% 30%; background:linear-gradient(180deg,#20252b,#030405); box-shadow:0 24px 18px rgba(0,0,0,.58); transform:skewX(-8deg); }
+    .car-visual::after { content:""; position:absolute; width:64%; height:5px; bottom:72px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.55; }
+    .model { position:absolute; left:22px; bottom:18px; color:rgba(255,255,255,.12); font-size:clamp(2.2rem,7vw,5rem); font-weight:900; letter-spacing:-.07em; }
+    .car-body { padding:26px; }
+    .car-title { display:flex; align-items:start; justify-content:space-between; gap:18px; }
+    .price { color:var(--gold); font-size:1.55rem; font-weight:900; white-space:nowrap; }
+    .price small { color:var(--muted); font-size:.76rem; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 0; }
+    .chip { padding:7px 11px; border:1px solid var(--line); border-radius:999px; color:#d7dbe0; font-size:.82rem; }
+    .choose-car { width:100%; margin-top:20px; }
+    .booking-bg { background:#0b0e13; border-block:1px solid var(--line); }
+    .booking { display:grid; grid-template-columns:.8fr 1.2fr; gap:48px; align-items:start; }
+    .price-box { position:sticky; top:104px; padding:26px; border:1px solid var(--line); border-radius:24px; background:linear-gradient(145deg,#171c23,#0e1116); }
+    .amount { margin:10px 0 2px; color:var(--gold); font-size:3.2rem; font-weight:900; letter-spacing:-.06em; }
+    .breakdown { margin:20px 0 0; padding:0; list-style:none; border-top:1px solid var(--line); }
+    .breakdown li { display:flex; justify-content:space-between; gap:18px; padding:14px 0; border-bottom:1px solid var(--line); color:#d2d7dc; }
+    form { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    fieldset { margin:0; min-width:0; border:0; padding:0; }
+    legend { margin-bottom:10px; color:#dadddf; font-size:.9rem; font-weight:800; }
+    .vehicle-picks { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .vehicle-pick { min-height:66px; padding:10px 14px; border:1px solid var(--line); border-radius:14px; background:#10141a; color:#fff; text-align:left; font-weight:800; }
+    .vehicle-pick span { display:block; margin-top:2px; color:var(--gold); font-size:.82rem; }
+    .vehicle-pick.active { border-color:var(--gold); background:rgba(214,173,104,.12); box-shadow:0 0 0 3px rgba(214,173,104,.1); }
+    .step-title { grid-column:1/-1; margin:12px 0 -4px; color:var(--gold); font-size:.78rem; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+    label { display:grid; gap:8px; color:#dadddf; font-size:.9rem; font-weight:700; }
+    .full { grid-column:1/-1; }
+    input,select,textarea { width:100%; min-height:52px; border:1px solid var(--line); border-radius:12px; background:#10141a; color:#fff; padding:0 14px; outline:none; }
+    textarea { min-height:100px; padding-top:13px; resize:vertical; }
+    input:focus,select:focus,textarea:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(214,173,104,.12); }
+    input::placeholder,textarea::placeholder { color:#727984; }
+    .form-note { color:var(--muted); font-size:.82rem; }
+    .services { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .service { padding:22px; border:1px solid var(--line); border-radius:18px; background:var(--panel); }
+    .service b { display:block; margin-bottom:6px; }
+    .service span { color:var(--muted); font-size:.9rem; }
+    .terms { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .term { padding:28px; border:1px solid var(--line); border-radius:22px; background:var(--panel); }
+    .term ul { margin:0; padding-left:20px; color:#c4c9cf; }
+    .term li+li { margin-top:10px; }
+    .contact { display:grid; grid-template-columns:1.1fr .9fr; gap:36px; align-items:center; padding:42px; border:1px solid var(--line); border-radius:30px; background:
+      radial-gradient(circle at 90% 10%,rgba(214,173,104,.18),transparent 34%),var(--panel); }
+    .contact-links { display:grid; gap:12px; }
+    .contact-links a { padding:16px 18px; border:1px solid var(--line); border-radius:14px; text-decoration:none; font-weight:800; }
+    footer { padding:34px 0 48px; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; }
+    .footer-row { display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+    dialog { width:min(720px,calc(100% - 24px)); max-height:92vh; overflow:auto; border:1px solid var(--line); border-radius:26px; background:#0d1117; color:#fff; padding:0; box-shadow:var(--shadow); }
+    dialog::backdrop { background:rgba(0,0,0,.78); backdrop-filter:blur(6px); }
+    .modal-head { position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; align-items:center; padding:22px 24px; border-bottom:1px solid var(--line); background:rgba(13,17,23,.95); }
+    .modal-head h2 { margin:0; font-family:inherit; font-size:1.2rem; letter-spacing:0; }
+    .close { width:42px; height:42px; border:1px solid var(--line); border-radius:50%; background:#171c23; color:#fff; font-size:1.3rem; }
+    .modal-body { padding:24px; }
+    .preview-badge { display:inline-flex; padding:7px 11px; border-radius:999px; background:rgba(214,173,104,.16); color:var(--gold); font-weight:800; font-size:.8rem; }
+    .order-summary { margin:18px 0; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+    .summary-row { display:flex; justify-content:space-between; gap:18px; padding:13px 15px; border-bottom:1px solid var(--line); }
+    .summary-row:last-child { border-bottom:0; }
+    .summary-row span { color:var(--muted); }
+    .summary-row.total { font-size:1.2rem; font-weight:900; }
+    #card-container { margin:18px 0; min-height:96px; padding:16px; border:1px solid var(--line); border-radius:16px; background:#fff; }
+    .pay-status { display:none; margin:14px 0 0; padding:13px 14px; border-radius:12px; background:rgba(244,177,169,.12); color:var(--danger); }
+    .pay-status.success { display:block; background:rgba(155,211,173,.12); color:var(--ok); }
+    .pay-status.error { display:block; }
+    .pay-button[disabled] { cursor:wait; opacity:.64; transform:none; }
+    .payment-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0; }
+    .payment-fields label { color:#dadddf; font-size:.86rem; font-weight:800; }
+    .payment-fields .full { grid-column:1 / -1; }
+    .payment-fields input { margin-top:7px; }
+    .amount-box { padding:18px; border:1px solid rgba(214,173,104,.48); border-radius:16px; background:rgba(214,173,104,.08); }
+    .amount-box small { display:block; margin-top:8px; color:var(--muted); line-height:1.45; }
+    .secure { text-align:center; color:var(--muted); font-size:.78rem; margin:12px 0 0; }
+    .notice { display:none; margin-top:16px; padding:14px; border-radius:12px; background:rgba(155,211,173,.12); color:var(--ok); }
+    @media (max-width:880px) {
+      .navlinks a:not(.btn) { display:none; }
+      .hero { min-height:760px; background-position:61% center; }
+      .fleet,.booking,.terms,.contact { grid-template-columns:1fr; }
+      .price-box { position:static; }
+      .services { grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width:600px) {
+      .wrap { width:min(100% - 22px,1180px); }
+      .navlinks .btn { min-height:44px; padding:0 15px; font-size:.82rem; }
+      section { padding:72px 0; }
+      .hero { min-height:720px; padding-top:120px; }
+      .facts { grid-template-columns:1fr; }
+      .payment-fields { grid-template-columns:1fr; }
+      .payment-fields .full { grid-column:auto; }
+      .fact { border-right:0; border-bottom:1px solid var(--line); }
+      .fact:last-child { border-bottom:0; }
+      .fleet,.services,form,.vehicle-picks { grid-template-columns:1fr; }
+      .full { grid-column:auto; }
+      .contact { padding:26px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="wrap" aria-label="Main navigation">
+      <a class="brand" href="#top">DAVTIAN GRIGOR LLC<small>Los Angeles · California</small></a>
+      <div class="navlinks">
+        <a href="#fleet">Fleet</a><a href="#services">Services</a><a href="#terms">Policies</a>
+        <a class="btn btn-primary" href="#reserve">Reserve a ride</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-copy">
+        <p class="eyebrow">Private chauffeur service · 24/7</p>
+        <h1>Los Angeles, driven with confidence.</h1>
+        <p>Reserve a private black SUV for airport transfers, business travel, events and hourly service across Los Angeles and California.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#reserve">Check price & reserve</a>
+          <a class="btn btn-secondary" href="tel:+17474886300">Call (747) 488-6300</a>
+        </div>
+        <div class="facts">
+          <div class="fact"><strong>2025 fleet</strong><span>Black BMW & Chevrolet SUVs</span></div>
+          <div class="fact"><strong>2-hour minimum</strong><span>Clear hourly pricing</span></div>
+          <div class="fact"><strong>Licensed carrier</strong><span>TCP0051387-P</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="fleet">
+      <div class="wrap">
+        <div class="section-head"><p class="eyebrow">Our fleet</p><h2>Choose your ride.</h2><p class="muted">Professional black-car service with a clean, comfortable vehicle selected for your group.</p></div>
+        <div class="fleet">
+          <article class="car selected" data-car="90">
+            <div class="car-visual"><span class="model">X5</span></div>
+            <div class="car-body">
+              <div class="car-title"><div><p class="eyebrow">Black · 2025</p><h3>BMW X5</h3></div><div class="price">$90 <small>/ hour</small></div></div>
+              <p class="muted">A refined SUV for airport, business and private rides.</p>
+              <div class="chips"><span class="chip">Up to 4 passengers</span><span class="chip">2-hour minimum</span><span class="chip">Child seat available</span></div>
+              <button class="btn btn-primary choose-car" type="button" data-vehicle="90">Choose BMW X5</button>
+            </div>
+          </article>
+          <article class="car" data-car="100">
+            <div class="car-visual"><span class="model">SUBURBAN</span></div>
+            <div class="car-body">
+              <div class="car-title"><div><p class="eyebrow">Premier · Black · 2025</p><h3>Chevrolet Suburban</h3></div><div class="price">$100 <small>/ hour</small></div></div>
+              <p class="muted">Full-size comfort and luggage space for larger groups.</p>
+              <div class="chips"><span class="chip">Up to 6 passengers</span><span class="chip">2-hour minimum</span><span class="chip">Pets welcome</span></div>
+              <button class="btn btn-primary choose-car" type="button" data-vehicle="100">Choose Suburban</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="booking-bg" id="reserve">
+      <div class="wrap booking">
+        <aside class="price-box">
+          <p class="eyebrow">Instant estimate</p><h2>Your ride.</h2>
+          <div class="amount" id="estimate">$180</div>
+          <p class="muted">Estimated total before parking, tolls or airport charges, when applicable.</p>
+          <ul class="breakdown">
+            <li><span>Vehicle</span><strong id="bVehicle">BMW X5</strong></li>
+            <li><span>Hourly rate</span><strong id="bRate">$90</strong></li>
+            <li><span>Reserved time</span><strong id="bHours">2 hours</strong></li>
+            <li><span>Passengers</span><strong id="bPassengers">1</strong></li>
+          </ul>
+        </aside>
+        <div>
+          <div class="section-head"><p class="eyebrow">Book your ride</p><h2>Vehicle, date and time first.</h2><p class="muted">Choose a vehicle, pickup date, starting time and number of hours. The price updates immediately.</p></div>
+          <form id="bookingForm">
+            <fieldset class="full"><legend>1. Choose vehicle</legend><div class="vehicle-picks">
+              <button class="vehicle-pick active" type="button" data-vehicle="90">BMW X5 <span>$90/hour · up to 4 passengers</span></button>
+              <button class="vehicle-pick" type="button" data-vehicle="100">Chevrolet Suburban <span>$100/hour · up to 6 passengers</span></button>
+            </div></fieldset>
+            <select id="vehicle" name="vehicle" hidden aria-hidden="true"><option value="90" data-cap="4">2025 BMW X5 — $90/hour</option><option value="100" data-cap="6">2025 Chevrolet Suburban Premier — $100/hour</option></select>
+            <p class="step-title">2. Select date and time</p>
+            <label>Pickup date<input id="date" name="date" type="date" required></label>
+            <label>Pickup time<input id="time" name="time" type="time" required></label>
+            <label>How many hours?
+              <select id="hours" name="hours"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select>
+            </label>
+            <label>Passengers
+              <select id="passengers" name="passengers"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+            </label>
+            <p class="step-title">3. Trip details</p>
+            <label>First name<input id="firstName" name="firstName" autocomplete="given-name" required placeholder="First name"></label>
+            <label>Last name<input id="lastName" name="lastName" autocomplete="family-name" required placeholder="Last name"></label>
+            <label>Phone<input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="(000) 000-0000"></label>
+            <label class="full">Pickup location<input id="pickup" name="pickup" required placeholder="Address, hotel or airport"></label>
+            <label class="full">Destination<input id="destination" name="destination" required placeholder="Where are you going?"></label>
+            <label class="full">Email<input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+            <label class="full">Trip notes (optional)<textarea id="notes" name="notes" placeholder="Flight number, child seat, pet or special request"></textarea></label>
+            <p class="form-note full">Your total is calculated from the selected vehicle and reserved hours. Card details are securely handled by Square.</p>
+            <button class="btn btn-primary btn-block full" type="submit">Review reservation & payment</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="services">
+      <div class="wrap">
+        <div class="section-head"><p class="eyebrow">Available 24/7</p><h2>Professional service for every plan.</h2></div>
+        <div class="services">
+          <div class="service"><b>Airport transfers</b><span>LAX and regional airport pickup or drop-off.</span></div>
+          <div class="service"><b>Hourly chauffeur</b><span>Keep the vehicle and driver available for your schedule.</span></div>
+          <div class="service"><b>Business & events</b><span>Reliable transportation for meetings and special occasions.</span></div>
+          <div class="service"><b>Long-distance rides</b><span>Private travel from Los Angeles across California.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="terms">
+      <div class="wrap">
+        <div class="section-head"><p class="eyebrow">Clear policies</p><h2>Know before you ride.</h2></div>
+        <div class="terms">
+          <div class="term"><h3>Cancellation</h3><ul><li>Cancel at least 24 hours before pickup for a full refund.</li><li>Cancellation within 24 hours: 50% of the reservation total.</li><li>No-show: 100% of the reservation total.</li></ul></div>
+          <div class="term"><h3>Reservation details</h3><ul><li>$20 deposit is charged when the reservation is confirmed and applied to the trip total.</li><li>The remaining balance is due to the driver after the ride.</li><li>2-hour minimum on every reservation.</li><li>Parking, tolls and airport charges may be added when applicable.</li><li>Gratuity is optional.</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap contact">
+        <div><p class="eyebrow">Davtian Grigor LLC</p><h2>Ready when you are.</h2><p class="muted">Serving Los Angeles and California, 24 hours a day.</p><p class="muted">TCP permit: TCP0051387-P · Expires May 19, 2029<br>LAX permit: LAX-2707444 · Expires May 2027</p></div>
+        <div class="contact-links"><a href="tel:+17474886300">Call: (747) 488-6300</a><a href="mailto:davtiangrigorllc@gmail.com">davtiangrigorllc@gmail.com</a><a href="#reserve">Get an instant estimate →</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap footer-row"><span>© <span id="year"></span> Davtian Grigor LLC</span><span>Private chauffeur service · Los Angeles, California</span></div></footer>
+
+  <dialog id="paymentModal">
+    <div class="modal-head"><h2>Reservation & secure payment</h2><button class="close" id="closeModal" aria-label="Close">×</button></div>
+    <div class="modal-body">
+      <span class="preview-badge">SECURE CHECKOUT BY SQUARE</span>
+      <p class="muted" style="margin-top:14px">Review the trip, enter your credit or debit card, then confirm the reservation.</p>
+      <div class="order-summary">
+        <div class="summary-row"><span>Vehicle</span><strong id="mVehicle"></strong></div>
+        <div class="summary-row"><span>Pickup</span><strong id="mPickup"></strong></div>
+        <div class="summary-row"><span>Destination</span><strong id="mDestination"></strong></div>
+        <div class="summary-row"><span>Date & time</span><strong id="mDate"></strong></div>
+        <div class="summary-row"><span>Reserved time</span><strong id="mHours"></strong></div>
+        <div class="summary-row"><span>Estimated trip total</span><strong id="mTotal"></strong></div>
+        <div class="summary-row"><span>Payment today</span><strong id="mPayment">$20</strong></div>
+        <div class="summary-row total"><span>Balance after ride</span><strong id="mBalance"></strong></div>
+      </div>
+      <h3>Secure card payment</h3>
+      <p class="muted">Enter the cardholder's name and payment amount. Card number, expiration date, CVV and billing ZIP are entered securely in the Square form below.</p>
+      <div class="payment-fields">
+        <label>Cardholder first name<input id="billingFirstName" autocomplete="cc-given-name" required></label>
+        <label>Cardholder last name<input id="billingLastName" autocomplete="cc-family-name" required></label>
+        <label>Tip (optional)<input id="tipAmount" type="number" inputmode="decimal" min="0" max="500" step="1" value="0" placeholder="0"></label>
+        <label class="full amount-box">How much do you want to pay today?
+          <input id="paymentAmount" type="number" inputmode="decimal" min="1" step="1" value="20" required>
+          <small>Enter any amount from $1 up to the estimated trip total. This payment is applied to the trip balance.</small>
+        </label>
+      </div>
+      <div id="card-container" aria-label="Credit or debit card details"></div>
+      <button class="btn btn-primary btn-block pay-button" id="payButton" type="button" disabled>Loading secure payment…</button>
+      <div class="pay-status" id="payStatus" role="status" aria-live="polite"></div>
+      <p class="secure">🔒 Card details will be handled directly by Square and will never be stored on this website.</p>
+    </div>
+  </dialog>
+
+  <script>
+    const vehicle = document.querySelector("#vehicle");
+    const hours = document.querySelector("#hours");
+    const passengers = document.querySelector("#passengers");
+    const modal = document.querySelector("#paymentModal");
+    const payButton = document.querySelector("#payButton");
+    const payStatus = document.querySelector("#payStatus");
+    let squareCard = null;
+    let cardLoading = null;
+    let currentBooking = null;
+    const paymentAmount = document.querySelector("#paymentAmount");
+    const tipAmount = document.querySelector("#tipAmount");
+    const money = value => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(value);
+    const vehicleName = () => vehicle.options[vehicle.selectedIndex].text.split(" — ")[0];
+    function selectVehicle(rate, shouldScroll = false) {
+      vehicle.value = String(rate);
+      document.querySelectorAll(".vehicle-pick").forEach(button => button.classList.toggle("active", button.dataset.vehicle === String(rate)));
+      document.querySelectorAll(".car").forEach(card => card.classList.toggle("selected", card.dataset.car === String(rate)));
+      updateEstimate();
+      if (shouldScroll) document.querySelector("#reserve").scrollIntoView({behavior:"smooth",block:"start"});
+    }
+    function updateEstimate() {
+      const rate = Number(vehicle.value), hrs = Number(hours.value), cap = Number(vehicle.selectedOptions[0].dataset.cap);
+      [...passengers.options].forEach(o => o.disabled = Number(o.value) > cap);
+      if (Number(passengers.value) > cap) passengers.value = String(cap);
+      document.querySelector("#estimate").textContent = money(rate * hrs);
+      document.querySelector("#bVehicle").textContent = vehicleName().replace("2025 ","");
+      document.querySelector("#bRate").textContent = money(rate);
+      document.querySelector("#bHours").textContent = hrs + (hrs === 1 ? " hour" : " hours");
+      document.querySelector("#bPassengers").textContent = passengers.value;
+    }
+    [vehicle,hours,passengers].forEach(el => el.addEventListener("change",updateEstimate));
+    document.querySelectorAll("[data-vehicle]").forEach(button => button.addEventListener("click",() => selectVehicle(button.dataset.vehicle, button.classList.contains("choose-car"))));
+    async function initializeSquareCard() {
+      if (squareCard) return squareCard;
+      if (cardLoading) return cardLoading;
+      cardLoading = (async () => {
+        if (!window.Square) throw new Error("Square's secure payment form could not load. Please refresh and try again.");
+        const payments = window.Square.payments("sq0idp-mn4whAbG0YQAFvNlqwHRJw", "LWWHWQ4CTYKWG");
+        squareCard = await payments.card();
+        await squareCard.attach("#card-container");
+        payButton.disabled = false;
+        updatePayButton();
+        return squareCard;
+      })().catch(error => {
+        cardLoading = null;
+        showPayStatus(error.message || "Secure payment could not load.", "error");
+        payButton.textContent = "Payment unavailable";
+        throw error;
+      });
+      return cardLoading;
+    }
+    function showPayStatus(message, type) {
+      payStatus.textContent = message;
+      payStatus.className = "pay-status " + type;
+    }
+    function updatePayButton() {
+      const payment = Number(paymentAmount.value || 0);
+      const tip = Number(tipAmount.value || 0);
+      payButton.textContent = `Pay ${money(payment + tip)} & book`;
+      document.querySelector("#mPayment").textContent = money(payment);
+      if (currentBooking) document.querySelector("#mBalance").textContent = money(Math.max(0, currentBooking.amount - payment));
+    }
+    [paymentAmount, tipAmount].forEach(input => input.addEventListener("input", updatePayButton));
+    document.querySelector("#bookingForm").addEventListener("submit",async event => {
+      event.preventDefault();
+      const rate = Number(vehicle.value), hrs = Number(hours.value);
+      currentBooking = {
+        vehicle: vehicle.value,
+        hours: hours.value,
+        passengers: passengers.value,
+        date: document.querySelector("#date").value,
+        time: document.querySelector("#time").value,
+        firstName: document.querySelector("#firstName").value.trim(),
+        lastName: document.querySelector("#lastName").value.trim(),
+        phone: document.querySelector("#phone").value.trim(),
+        email: document.querySelector("#email").value.trim(),
+        pickup: document.querySelector("#pickup").value.trim(),
+        destination: document.querySelector("#destination").value.trim(),
+        notes: document.querySelector("#notes").value.trim(),
+        amount: rate * hrs
+      };
+      document.querySelector("#mVehicle").textContent = vehicleName();
+      document.querySelector("#mPickup").textContent = currentBooking.pickup;
+      document.querySelector("#mDestination").textContent = currentBooking.destination;
+      document.querySelector("#mDate").textContent = currentBooking.date + " · " + currentBooking.time;
+      document.querySelector("#mHours").textContent = hrs + " hours";
+      document.querySelector("#mTotal").textContent = money(rate * hrs);
+      paymentAmount.max = String(rate * hrs);
+      paymentAmount.value = "20";
+      tipAmount.value = "0";
+      document.querySelector("#billingFirstName").value = currentBooking.firstName;
+      document.querySelector("#billingLastName").value = currentBooking.lastName;
+      updatePayButton();
+      payStatus.className = "pay-status";
+      payStatus.textContent = "";
+      modal.showModal();
+      document.body.classList.add("locked");
+      try { await initializeSquareCard(); } catch {}
+    });
+    payButton.addEventListener("click", async () => {
+      if (!squareCard || !currentBooking) return;
+      payButton.disabled = true;
+      payButton.textContent = "Processing payment…";
+      payStatus.className = "pay-status";
+      try {
+        const payment = Number(paymentAmount.value);
+        const tip = Number(tipAmount.value || 0);
+        const billingFirstName = document.querySelector("#billingFirstName").value.trim();
+        const billingLastName = document.querySelector("#billingLastName").value.trim();
+        if (!billingFirstName || !billingLastName) throw new Error("Please enter the cardholder's first and last name.");
+        if (!Number.isFinite(payment) || payment < 1 || payment > currentBooking.amount) throw new Error(`Enter a payment between $1 and ${money(currentBooking.amount)}.`);
+        if (!Number.isFinite(tip) || tip < 0 || tip > 500) throw new Error("Enter a tip from $0 to $500.");
+        const tokenResult = await squareCard.tokenize({
+          amount: (payment + tip).toFixed(2),
+          currencyCode: "USD",
+          intent: "CHARGE",
+          customerInitiated: true,
+          sellerKeyedIn: false,
+          billingContact: {
+            givenName: billingFirstName,
+            familyName: billingLastName,
+            email: currentBooking.email,
+            phone: currentBooking.phone,
+            countryCode: "US"
+          }
+        });
+        if (tokenResult.status !== "OK") throw new Error("Please check the card details and try again.");
+        const response = await fetch("/api/create-payment", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            ...currentBooking,
+            paymentAmount: Math.round(payment * 100),
+            tip: Math.round(tip * 100),
+            sourceId: tokenResult.token,
+            idempotencyKey: crypto.randomUUID()
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || "Payment could not be completed.");
+        showPayStatus(`Reservation confirmed. ${money(result.chargedToday)} paid today. ${money(result.remainingBalance)} is due to the driver after the ride. Confirmation: ${result.paymentId}`, "success");
+        payButton.textContent = "Deposit paid & booking confirmed";
+        document.querySelector("#bookingForm").reset();
+      } catch (error) {
+        showPayStatus(error.message || "Payment could not be completed. Please try again.", "error");
+        payButton.disabled = false;
+        updatePayButton();
+      }
+    });
+    function closeModal(){ modal.close(); document.body.classList.remove("locked"); }
+    document.querySelector("#closeModal").addEventListener("click",closeModal);
+    modal.addEventListener("click",e => { if(e.target === modal) closeModal(); });
+    document.querySelector("#year").textContent = new Date().getFullYear();
+    const min = new Date(Date.now()+2*60*60*1000); document.querySelector("#date").min = min.toISOString().split("T")[0];
+    selectVehicle(90);
+  </script>
+</body>
+</html>
