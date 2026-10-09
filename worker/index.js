@@ -9,7 +9,6 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 
 const vehicleRates = {
   "90": { name: "2025 BMW X5", hourlyRate: 90, maxPassengers: 4 },
-  "100": { name: "2025 Chevrolet Suburban Premier", hourlyRate: 100, maxPassengers: 6 },
 };
 
 function cleanText(value, max = 300) {
@@ -49,7 +48,7 @@ async function createPayment(request, env) {
 
   if (!vehicle || !Number.isInteger(hours) || hours < 2 || hours > 10 ||
       !Number.isInteger(passengers) || passengers < 1 || passengers > vehicle.maxPassengers ||
-      !Number.isInteger(paymentAmount) || paymentAmount < 100 || paymentAmount > estimatedTotal ||
+      !Number.isInteger(paymentAmount) || paymentAmount < 1000 || paymentAmount > estimatedTotal ||
       !Number.isInteger(tip) || tip < 0 || tip > 50000 ||
       !sourceId || !idempotencyKey || !firstName || !lastName || !phone || !email || !pickup || !destination || !date || !time) {
     return json({ ok: false, message: "Please check the reservation details and try again." }, 400);
@@ -62,7 +61,7 @@ async function createPayment(request, env) {
     `${pickup} to ${destination}`,
     `Passenger: ${firstName} ${lastName} · ${phone}`,
     `Estimated trip total: $${(estimatedTotal / 100).toFixed(2)}`,
-    `Payment today: $${(paymentAmount / 100).toFixed(2)} · Balance after ride: $${(remainingBalance / 100).toFixed(2)}`,
+    `Payment today: $${(paymentAmount / 100).toFixed(2)} · Remaining balance by agreement: $${(remainingBalance / 100).toFixed(2)}`,
     tip ? `Optional tip paid: $${(tip / 100).toFixed(2)}` : "No tip added",
     notes ? `Notes: ${notes}` : "",
   ].filter(Boolean).join(" | ").slice(0, 500);
