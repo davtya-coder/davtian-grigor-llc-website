@@ -300,21 +300,24 @@
         <div class="summary-row"><span>Payment today</span><strong id="mPayment">$20</strong></div>
         <div class="summary-row total"><span>Balance after ride</span><strong id="mBalance"></strong></div>
       </div>
-      <h3>Secure card payment</h3>
-      <p class="muted">Enter the cardholder's name and payment amount. Card number, expiration date, CVV and billing ZIP are entered securely in the Square form below.</p>
-      <div class="payment-fields">
-        <label>Cardholder first name<input id="billingFirstName" autocomplete="cc-given-name" required></label>
-        <label>Cardholder last name<input id="billingLastName" autocomplete="cc-family-name" required></label>
-        <label>Tip (optional)<input id="tipAmount" type="number" inputmode="decimal" min="0" max="500" step="1" value="0" placeholder="0"></label>
-        <label class="full amount-box">How much do you want to pay today?
-          <input id="paymentAmount" type="number" inputmode="decimal" min="1" step="1" value="20" required>
-          <small>Enter any amount from $1 up to the estimated trip total. This payment is applied to the trip balance.</small>
-        </label>
+      <div id="paymentEntry">
+        <h3>Secure card payment</h3>
+        <p class="muted">Enter the cardholder's name and payment amount. Card number, expiration date, CVV and billing ZIP are entered securely in the Square form below.</p>
+        <div class="payment-fields">
+          <label>Cardholder first name<input id="billingFirstName" autocomplete="cc-given-name" required></label>
+          <label>Cardholder last name<input id="billingLastName" autocomplete="cc-family-name" required></label>
+          <label>Tip (optional)<input id="tipAmount" type="number" inputmode="decimal" min="0" max="500" step="1" value="0" placeholder="0"></label>
+          <label class="full amount-box">How much do you want to pay today?
+            <input id="paymentAmount" type="number" inputmode="decimal" min="1" step="1" value="20" required>
+            <small>Enter any amount from $1 up to the estimated trip total. This payment is applied to the trip balance.</small>
+          </label>
+        </div>
+        <div id="card-container" aria-label="Credit or debit card details"></div>
+        <button class="btn btn-primary btn-block pay-button" id="payButton" type="button" disabled>Loading secure payment…</button>
+        <div class="pay-status" id="payStatus" role="status" aria-live="polite"></div>
       </div>
-      <div id="card-container" aria-label="Credit or debit card details"></div>
-      <button class="btn btn-primary btn-block pay-button" id="payButton" type="button" disabled>Loading secure payment…</button>
-      <div class="pay-status" id="payStatus" role="status" aria-live="polite"></div>
-      <p class="secure">🔒 Card details will be handled directly by Square and will never be stored on this website.</p>
+      <div class="pay-status success" id="paymentSuccess" role="status" aria-live="polite" hidden></div>
+      <p class="secure">🔒 Card details are handled directly by Square. This website never receives or stores the card number, expiration date or CVV.</p>
     </div>
   </dialog>
 
@@ -414,6 +417,8 @@
       updatePayButton();
       payStatus.className = "pay-status";
       payStatus.textContent = "";
+      document.querySelector("#paymentEntry").hidden = false;
+      document.querySelector("#paymentSuccess").hidden = true;
       modal.showModal();
       document.body.classList.add("locked");
       try { await initializeSquareCard(); } catch {}
@@ -459,8 +464,14 @@
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.ok) throw new Error(result.message || "Payment could not be completed.");
-        showPayStatus(`Reservation confirmed. ${money(result.chargedToday)} paid today. ${money(result.remainingBalance)} is due to the driver after the ride. Confirmation: ${result.paymentId}`, "success");
-        payButton.textContent = "Deposit paid & booking confirmed";
+        const success = document.querySelector("#paymentSuccess");
+        success.textContent = `Reservation confirmed. ${money(result.chargedToday)} paid today. ${money(result.remainingBalance)} is due to the driver after the ride. Confirmation: ${result.paymentId}`;
+        success.hidden = false;
+        document.querySelector("#paymentEntry").hidden = true;
+        try { await squareCard.destroy(); } catch {}
+        squareCard = null;
+        cardLoading = null;
+        document.querySelector("#card-container").replaceChildren();
         document.querySelector("#bookingForm").reset();
       } catch (error) {
         showPayStatus(error.message || "Payment could not be completed. Please try again.", "error");
