@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#07090c">
+  <title>Owner Dashboard | Davtian Grigor LLC</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/admin.js" defer></script>
+</head>
+<body class="admin-page">
+  <section class="login-card" id="loginPanel">
+    <p class="eyebrow">Private owner access</p>
+    <h1>Booking dashboard</h1>
+    <p>Enter the owner password. Customers cannot access this page.</p>
+    <form id="loginForm" class="form-grid">
+      <div class="field full"><label for="password">Owner password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <p class="status-message full" id="loginStatus" role="status"></p>
+      <button class="button button-primary full" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <main class="admin-shell" id="dashboard" hidden>
+    <div class="admin-top">
+      <div><p class="eyebrow">Davtian Grigor LLC</p><h1>Owner dashboard</h1></div>
+      <div class="admin-actions">
+        <a class="button button-secondary compact" href="/api/admin/export.csv">Download records</a>
+        <button class="button button-secondary compact" id="settingsButton" type="button">Pricing & settings</button>
+        <button class="button button-quiet compact" id="refreshButton" type="button">Refresh</button>
+        <button class="button button-quiet compact" id="logoutButton" type="button">Sign out</button>
+      </div>
+    </div>
+    <div class="service-status" id="serviceStatus"></div>
+    <p class="status-message" id="globalStatus" role="status" aria-live="polite"></p>
+
+    <div class="admin-grid">
+      <section class="admin-list">
+        <div class="filter-row" id="filters">
+          <button class="active" data-status="">All</button>
+          <button data-status="REQUESTED">New</button>
+          <button data-status="APPROVED">Approved</button>
+          <button data-status="CONFIRMED">Confirmed</button>
+          <button data-status="CANCELLED">Cancelled</button>
+        </div>
+        <div class="booking-list" id="bookingList"></div>
+      </section>
+
+      <section class="admin-detail" id="emptyDetail">
+        <div class="empty-state"><h2>Select a booking</h2><p>Choose a request from the list to review it.</p></div>
+      </section>
+
+      <section class="admin-detail" id="bookingDetail" hidden>
+        <p class="eyebrow">Booking <span id="detailReference"></span></p>
+        <h2 id="detailStatus"></h2>
+        <div class="summary-list">
+          <div class="summary-row"><span>Vehicle</span><strong>2025 BMW X5</strong></div>
+          <div class="summary-row"><span>Pickup</span><strong id="detailPickup"></strong></div>
+          <div class="summary-row"><span>Destination</span><strong id="detailDestination"></strong></div>
+          <div class="summary-row"><span>Date & time</span><strong id="detailDate"></strong></div>
+          <div class="summary-row"><span>Distance & time</span><strong id="detailRoute"></strong></div>
+          <div class="summary-row"><span>Customer contact</span><strong id="detailContact"></strong></div>
+          <div class="summary-row"><span>Estimated price</span><strong id="detailEstimate"></strong></div>
+          <div class="summary-row"><span>Final price</span><strong id="detailFinal"></strong></div>
+          <div class="summary-row"><span>Payment</span><strong id="detailPayment"></strong></div>
+          <div class="summary-row"><span>Remaining balance</span><strong id="detailRemaining"></strong></div>
+        </div>
+
+        <div id="decisionArea">
+          <h3>Review request</h3>
+          <div class="admin-form">
+            <label class="full">Final approved price ($)<input id="finalPrice" type="number" min="1" step="0.01"></label>
+            <fieldset class="payment-options full">
+              <legend>Amounts the customer may pay</legend>
+              <div>
+                <label class="payment-option"><input id="allow10" type="checkbox" value="10" checked><span>$10 deposit</span></label>
+                <label class="payment-option"><input id="allow20" type="checkbox" value="20" checked><span>$20 deposit</span></label>
+                <label class="payment-option"><input id="allowFull" type="checkbox" value="full" checked><span>Full approved price</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="admin-toolbar">
+            <button class="button button-primary" id="approveButton" type="button">Accept booking</button>
+            <button class="button button-danger" id="declineButton" type="button">Decline booking</button>
+          </div>
+          <div id="approvalLinkBox" class="warning-box" hidden>
+            <strong>Customer payment link</strong>
+            <p id="approvalDelivery"></p>
+            <a id="approvalLink" href="#" target="_blank" rel="noopener"></a>
+            <button class="button button-secondary compact" id="copyLinkButton" type="button">Copy link</button>
+          </div>
+        </div>
+
+        <h3>Waybill information</h3>
+        <p class="fine-print">Complete every missing field before the trip. The electronic waybill contains the nine items listed in CPUC General Order 157-E §3.01.</p>
+        <form id="waybillForm" class="admin-form">
+          <label class="full">Customer / arranging party address<input id="customerAddress" placeholder="Required before trip"></label>
+          <label>Passengers (1–4)<input id="passengerCount" type="number" min="1" max="4"></label>
+          <label>Driver name<input id="driverName"></label>
+          <label>Vehicle license plate<input id="vehiclePlate"></label>
+          <label>TCP number<input id="tcpNumber"></label>
+          <label class="full">Owner notes<textarea id="ownerNotes"></textarea></label>
+          <button class="button button-secondary full" type="submit">Save waybill details</button>
+        </form>
+        <div class="admin-toolbar">
+          <a class="button button-secondary" id="waybillButton" href="#" target="_blank">Open / print waybill</a>
+          <button class="button button-primary" id="verifyZelleButton" type="button" hidden>Confirm Zelle received</button>
+          <button class="button button-quiet" id="cancelButton" type="button">Cancel booking</button>
+          <button class="button button-quiet" id="refundButton" type="button">Issue refund</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="settingsDialog" class="settings-dialog">
+    <div class="panel">
+      <div class="admin-top"><div><p class="eyebrow">Owner controls</p><h2>Pricing & settings</h2></div><button class="button button-quiet compact" id="closeSettings" type="button">Close</button></div>
+      <form id="settingsForm" class="admin-form">
+        <label class="full">Owner notification email<input id="ownerEmail" type="email" required></label>
+        <label>Base fare ($)<input id="baseFare" type="number" min="0" step="0.01" required></label>
+        <label>Price per mile ($)<input id="perMile" type="number" min="0" step="0.01" required></label>
+        <label>Price per minute ($)<input id="perMinute" type="number" min="0" step="0.01" required></label>
+        <label>Minimum trip price ($)<input id="minimumPrice" type="number" min="1" step="0.01" required></label>
+        <p class="warning-box full">Formula: base fare + route miles × price per mile + Google route minutes × price per minute, then the minimum price is applied. The estimate is rounded up to the next whole dollar.</p>
+        <label>Default driver name<input id="settingsDriverName"></label>
+        <label>BMW X5 license plate<input id="settingsVehiclePlate"></label>
+        <label class="full">TCP number<input id="settingsTcpNumber" required></label>
+        <p class="status-message full" id="settingsStatus" role="status"></p>
+        <button class="button button-secondary full" id="testEmailButton" type="button">Send test email to owner</button>
+        <button class="button button-primary full" type="submit">Save settings</button>
+      </form>
+    </div>
+  </dialog>
+</body>
+</html>

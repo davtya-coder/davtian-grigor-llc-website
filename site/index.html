@@ -6,7 +6,6 @@
   <meta name="description" content="Reserve a private 2025 BMW X5 with Davtian Grigor LLC for airport transfers, business travel and hourly chauffeur service in Los Angeles.">
   <meta name="theme-color" content="#07090c">
   <title>Davtian Grigor LLC | Los Angeles Black Car Service</title>
-  <script src="https://web.squarecdn.com/v1/square.js"></script>
   <style>
     :root {
       --bg:#07090c; --panel:#11151b; --panel2:#171c23; --gold:#d6ad68;
@@ -58,6 +57,20 @@
     .inline-estimate { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:20px; padding:15px 17px; border:1px solid var(--line); border-radius:16px; background:#10141a; }
     .inline-estimate .amount { margin:0; font-size:2rem; }
     .inline-estimate span { color:var(--muted); font-size:.82rem; }
+    .route-result { margin-top:20px; padding:18px; border:1px solid rgba(214,173,104,.38); border-radius:18px; background:#10141a; }
+    .route-result[hidden] { display:none; }
+    .route-price { margin:3px 0 16px; color:var(--gold); font-size:2.35rem; font-weight:900; letter-spacing:-.045em; }
+    .route-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .route-stat { padding:13px; border:1px solid var(--line); border-radius:13px; background:#0c1015; }
+    .route-stat span { display:block; color:var(--muted); font-size:.78rem; }
+    .route-stat strong { display:block; margin-top:3px; color:#fff; font-size:1.05rem; }
+    .route-status { grid-column:1/-1; min-height:22px; margin:0; color:var(--danger); font-size:.86rem; }
+    .estimate-note { margin:14px 0 0; color:var(--muted); font-size:.78rem; }
+    .request-form { margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+    .request-form label { margin-bottom:12px; }
+    .request-status { min-height:22px; margin:12px 0 0; color:var(--danger); font-size:.86rem; }
+    .request-status.success { color:var(--ok); }
+    .honey-field { position:absolute!important; left:-10000px!important; width:1px!important; height:1px!important; overflow:hidden!important; }
     .fact strong { display:block; color:#fff; font-size:1.05rem; }
     .fact span { color:var(--muted); font-size:.83rem; }
     section { padding:96px 0; }
@@ -161,6 +174,7 @@
       .facts { grid-template-columns:1fr; }
       .payment-fields { grid-template-columns:1fr; }
       .payment-fields .full { grid-column:auto; }
+      .route-stats { grid-template-columns:1fr; }
       .fact { border-right:0; border-bottom:1px solid var(--line); }
       .fact:last-child { border-bottom:0; }
       .fleet,.services,form,.vehicle-picks { grid-template-columns:1fr; }
@@ -190,34 +204,36 @@
           <div class="hero-actions"><a class="btn btn-secondary" href="tel:+17474886300">Call (747) 488-6300</a></div>
           <div class="facts">
             <div class="fact"><strong>2025 BMW X5</strong><span>Private black SUV · up to 4 passengers</span></div>
-            <div class="fact"><strong>2-hour minimum</strong><span>Clear pricing at $90/hour</span></div>
+            <div class="fact"><strong>Route-based estimate</strong><span>Distance and travel time pricing</span></div>
             <div class="fact"><strong>Licensed carrier</strong><span>TCP0051387-P</span></div>
           </div>
         </div>
         <div class="booking-panel">
-          <div class="section-head"><p class="eyebrow">Book your ride</p><h2>Request your BMW.</h2><p class="muted">Enter the trip details, review the estimate and pay an agreed deposit or the full amount securely through Square.</p></div>
-          <div class="inline-estimate"><div><span>Estimated trip total</span><div class="amount" id="estimate">$180</div></div><div><strong id="bVehicle">BMW X5</strong><br><span id="bRate">$90/hour</span> · <span id="bHours">2 hours</span><br><span id="bPassengers">1 passenger</span></div></div>
-          <form id="bookingForm">
-            <select id="vehicle" name="vehicle" hidden aria-hidden="true"><option value="90" data-cap="4">2025 BMW X5 — $90/hour</option></select>
-            <p class="step-title">1. Pickup time</p>
-            <label>Pickup date<input id="date" name="date" type="date" required></label>
-            <label>Pickup time<input id="time" name="time" type="time" required></label>
-            <label>How many hours?<select id="hours" name="hours"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
-            <label>Passengers<select id="passengers" name="passengers"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
-            <p class="step-title">2. Where should we pick you up?</p>
-            <label class="full">Pickup location<input id="pickup" name="pickup" required placeholder="Address, hotel or airport"></label>
-            <button class="btn btn-secondary full" id="useLocation" type="button">Use my current location</button>
-            <label class="full">Destination<input id="destination" name="destination" required placeholder="Where are you going?"></label>
-            <p class="step-title">3. Contact details</p>
-            <label>First name<input id="firstName" name="firstName" autocomplete="given-name" required placeholder="First name"></label>
-            <label>Last name<input id="lastName" name="lastName" autocomplete="family-name" required placeholder="Last name"></label>
-            <label>Phone<input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="(000) 000-0000"></label>
-            <label class="full">Email<input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
-            <label class="full">Trip notes (optional)<textarea id="notes" name="notes" placeholder="Flight number, child seat, pet or special request"></textarea></label>
-            <label class="consent full"><input type="checkbox" required><span>I agree to the reservation policies and acknowledge the <a href="#privacy">Privacy Policy</a>.</span></label>
-            <p class="form-note full">Guest checkout — no account required. Card details are handled only by Square and are never stored on this website.</p>
-            <button class="btn btn-primary btn-block full" type="submit">Review reservation & payment</button>
+          <div class="section-head"><p class="eyebrow">Instant route estimate</p><h2>Where are you going?</h2><p class="muted">Enter your pickup and destination. Google Maps calculates the actual driving route.</p></div>
+          <form id="routeForm">
+            <label class="full">From — Pickup address<input id="pickup" name="pickup" autocomplete="street-address" required placeholder="Pickup address"></label>
+            <label class="full">To — Destination address<input id="destination" name="destination" autocomplete="street-address" required placeholder="Destination address"></label>
+            <label>Pickup date<input id="pickupDate" name="date" type="date" required></label>
+            <label>Pickup time<input id="pickupTime" name="time" type="time" required></label>
+            <div class="vehicle-fixed full"><span class="muted">Vehicle</span><br><strong>2025 BMW X5</strong></div>
+            <p class="route-status" id="routeStatus" role="status" aria-live="polite"></p>
+            <button class="btn btn-primary btn-block full" id="routeButton" type="submit">Calculate route and price</button>
           </form>
+          <section class="route-result" id="routeResult" aria-live="polite" hidden>
+            <span class="muted">Estimated Price</span>
+            <div class="route-price" id="routePrice">—</div>
+            <div class="route-stats">
+              <div class="route-stat"><span>Distance</span><strong id="routeDistance">—</strong></div>
+              <div class="route-stat"><span>Travel Time</span><strong id="routeTime">—</strong></div>
+            </div>
+            <p class="estimate-note" id="pricingFormula">Estimate based on the actual Google Maps driving route and the configured trip tariff. Tolls, parking, airport fees, waiting time and major traffic changes are not included.</p>
+            <form class="request-form" id="requestForm">
+              <label>Email address<input id="customerEmail" name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+              <label class="honey-field" aria-hidden="true">Company<input id="company" name="company" tabindex="-1" autocomplete="off"></label>
+              <button class="btn btn-primary btn-block" id="requestButton" type="submit">Send ride request</button>
+              <p class="request-status" id="requestStatus" role="status" aria-live="polite"></p>
+            </form>
+          </section>
         </div>
       </div>
     </section>
@@ -229,9 +245,9 @@
           <article class="car selected" data-car="90">
             <div class="car-visual"><span class="model">X5</span></div>
             <div class="car-body">
-              <div class="car-title"><div><p class="eyebrow">Black · 2025</p><h3>BMW X5</h3></div><div class="price">$90 <small>/ hour</small></div></div>
+              <div class="car-title"><div><p class="eyebrow">Black · 2025</p><h3>BMW X5</h3></div><div class="price">Private <small>service</small></div></div>
               <p class="muted">A refined SUV for airport, business and private rides.</p>
-              <div class="chips"><span class="chip">Up to 4 passengers</span><span class="chip">2-hour minimum</span><span class="chip">Child seat available</span></div>
+              <div class="chips"><span class="chip">Up to 4 passengers</span><span class="chip">Price shown before request</span><span class="chip">Child seat available</span></div>
               <a class="btn btn-primary choose-car" href="#reserve">Reserve this BMW X5</a>
             </div>
           </article>
@@ -256,7 +272,7 @@
         <div class="section-head"><p class="eyebrow">Clear policies</p><h2>Know before you ride.</h2></div>
         <div class="terms">
           <div class="term"><h3>Cancellation</h3><ul><li>Cancel at least 24 hours before pickup for a refund of the amount paid.</li><li>Payments for cancellations within 24 hours and no-shows may be non-refundable.</li><li>No additional amount is charged automatically without the customer’s authorization.</li></ul></div>
-          <div class="term"><h3>Reservation details</h3><ul><li>Pay an agreed amount from $10 up to the full estimated trip total.</li><li>Any remaining balance is paid after the ride by the method agreed with the driver.</li><li>2-hour minimum on every reservation.</li><li>Parking, tolls and airport charges may be added when applicable.</li><li>Gratuity is optional.</li></ul></div>
+          <div class="term"><h3>Reservation details</h3><ul><li>No payment is taken when the request is submitted.</li><li>After approval, only the owner-authorized $10, $20 or full-payment option is available.</li><li>Square card payments and Zelle business transfers are accepted.</li><li>A Zelle transfer is confirmed only after the owner verifies the bank deposit.</li><li>Parking, tolls and airport charges may be added when disclosed before payment.</li></ul></div>
         </div>
       </div>
     </section>
@@ -264,7 +280,7 @@
     <section>
       <div class="wrap contact">
         <div><p class="eyebrow">Davtian Grigor LLC</p><h2>Ready when you are.</h2><p class="muted">Serving Los Angeles and California, 24 hours a day.</p><p class="muted">TCP permit: TCP0051387-P · Expires May 19, 2029<br>LAX permit: LAX-2707444 · Expires May 2027</p></div>
-        <div class="contact-links"><a href="tel:+17474886300">Call: (747) 488-6300</a><a href="mailto:davtiangrigorllc@gmail.com">davtiangrigorllc@gmail.com</a><a href="#reserve">Get an instant estimate →</a></div>
+        <div class="contact-links"><a href="tel:+17474886300">Call: (747) 488-6300</a><a href="mailto:davtya@gmail.com">davtya@gmail.com</a><a href="#reserve">Get an instant estimate →</a></div>
       </div>
     </section>
 
@@ -277,9 +293,9 @@
         <h3>Payments and card security</h3>
         <p>Card fields are provided by Square. This website does not receive or store the full card number, expiration date or CVV. Payment and contact information needed for the transaction is shared with Square to process the customer’s request. A card is not saved for future rides through this website.</p>
         <h3>Use, sharing and retention</h3>
-        <p>Information is used only to provide the requested transportation service, process payment, prevent fraud, maintain transaction records and comply with legal obligations. Davtian Grigor LLC does not sell personal information or use it for cross-context behavioral advertising.</p>
+        <p>Information is used only to provide the requested transportation service, send transactional messages, process an approved payment, prevent fraud, maintain transaction records and comply with legal obligations. Davtian Grigor LLC does not sell personal information or use it for cross-context behavioral advertising.</p>
         <h3>Your choices</h3>
-        <p>Customers may request access, correction or deletion of their information, subject to transaction-record and legal exceptions, by emailing <a href="mailto:davtiangrigorllc@gmail.com">davtiangrigorllc@gmail.com</a> or calling <a href="tel:+17474886300">(747) 488-6300</a>. Browser Do Not Track signals do not change the site because the site does not perform cross-site advertising tracking.</p>
+        <p>Customers may request access, correction or deletion of their information, subject to transaction-record and legal exceptions, by emailing <a href="mailto:davtya@gmail.com">davtya@gmail.com</a> or calling <a href="tel:+17474886300">(747) 488-6300</a>. Browser Do Not Track signals do not change the site because the site does not perform cross-site advertising tracking.</p>
       </div>
     </section>
   </main>
@@ -322,7 +338,90 @@
     </div>
   </dialog>
 
-  <script>
+  <script src="/app.js" defer></script>
+  <script type="text/plain" hidden>
+    const routeForm = document.querySelector("#routeForm");
+    const routeStatus = document.querySelector("#routeStatus");
+    const routeButton = document.querySelector("#routeButton");
+    const routeResult = document.querySelector("#routeResult");
+    const pickupDate = document.querySelector("#pickupDate");
+    const pickupTime = document.querySelector("#pickupTime");
+    const requestForm = document.querySelector("#requestForm");
+    const requestButton = document.querySelector("#requestButton");
+    const requestStatus = document.querySelector("#requestStatus");
+    const money = value => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(value);
+    pickupDate.min = new Date().toLocaleDateString("en-CA");
+    [document.querySelector("#pickup"), document.querySelector("#destination"), pickupDate, pickupTime].forEach(input => {
+      input.addEventListener("input", () => {
+        routeResult.hidden = true;
+        requestStatus.textContent = "";
+        requestStatus.className = "request-status";
+      });
+    });
+    routeForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!routeForm.reportValidity()) return;
+      routeButton.disabled = true;
+      routeButton.textContent = "Calculating route…";
+      routeStatus.textContent = "";
+      routeResult.hidden = true;
+      try {
+        const response = await fetch("/api/route-estimate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            pickup: document.querySelector("#pickup").value.trim(),
+            destination: document.querySelector("#destination").value.trim()
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || "Route could not be calculated.");
+        document.querySelector("#routeDistance").textContent = `${result.distanceMiles.toFixed(1)} miles`;
+        document.querySelector("#routeTime").textContent = `${result.durationMinutes} minutes`;
+        document.querySelector("#routePrice").textContent = money(result.estimatedPrice);
+        routeResult.hidden = false;
+      } catch (error) {
+        routeStatus.textContent = error.message || "Route could not be calculated. Please check both addresses.";
+      } finally {
+        routeButton.disabled = false;
+        routeButton.textContent = "Calculate route and price";
+      }
+    });
+
+    requestForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!requestForm.reportValidity() || !routeForm.reportValidity()) return;
+      requestButton.disabled = true;
+      requestButton.textContent = "Sending request…";
+      requestStatus.textContent = "";
+      requestStatus.className = "request-status";
+      try {
+        const response = await fetch("/api/ride-request", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            pickup: document.querySelector("#pickup").value.trim(),
+            destination: document.querySelector("#destination").value.trim(),
+            date: pickupDate.value,
+            time: pickupTime.value,
+            email: document.querySelector("#customerEmail").value.trim(),
+            company: document.querySelector("#company").value
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || "The request could not be sent.");
+        requestStatus.textContent = "Your ride request was sent. We will review it and email you before any payment is requested.";
+        requestStatus.className = "request-status success";
+        requestButton.textContent = "Request sent";
+      } catch (error) {
+        requestStatus.textContent = error.message || "The request could not be sent. Please try again.";
+        requestButton.disabled = false;
+        requestButton.textContent = "Send ride request";
+      }
+    });
+
+    const bookingForm = document.querySelector("#bookingForm");
+    if (bookingForm) {
     const vehicle = document.querySelector("#vehicle");
     const hours = document.querySelector("#hours");
     const passengers = document.querySelector("#passengers");
@@ -334,7 +433,6 @@
     let currentBooking = null;
     const paymentAmount = document.querySelector("#paymentAmount");
     const tipAmount = document.querySelector("#tipAmount");
-    const money = value => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(value);
     const vehicleName = () => vehicle.options[vehicle.selectedIndex].text.split(" — ")[0];
     function selectVehicle(rate, shouldScroll = false) {
       vehicle.value = String(rate);
@@ -411,7 +509,7 @@
         pickup.setCustomValidity("");
       }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
     });
-    document.querySelector("#bookingForm").addEventListener("submit",async event => {
+    bookingForm.addEventListener("submit",async event => {
       event.preventDefault();
       const rate = Number(vehicle.value), hrs = Number(hours.value);
       currentBooking = {
@@ -508,9 +606,10 @@
     function closeModal(){ modal.close(); document.body.classList.remove("locked"); }
     document.querySelector("#closeModal").addEventListener("click",closeModal);
     modal.addEventListener("click",e => { if(e.target === modal) closeModal(); });
-    document.querySelector("#year").textContent = new Date().getFullYear();
     const min = new Date(Date.now()+2*60*60*1000); document.querySelector("#date").min = min.toISOString().split("T")[0];
     selectVehicle(90);
+    }
+    document.querySelector("#year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#07090c">
+  <title>Complete Reservation | Davtian Grigor LLC</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://web.squarecdn.com/v1/square.js"></script>
+  <script src="/reserve.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="wrap nav"><a class="brand" href="/">DAVTIAN GRIGOR LLC<small>Secure reservation</small></a></nav>
+  </header>
+  <main class="page-shell">
+    <div class="narrow">
+      <section class="panel" id="loadingPanel">
+        <p class="eyebrow">Secure reservation</p>
+        <h1>Loading your approved trip…</h1>
+      </section>
+
+      <section id="errorPanel" class="panel" hidden>
+        <p class="eyebrow">Reservation link</p>
+        <h1>We could not open this reservation.</h1>
+        <p id="loadError" class="status-message error"></p>
+        <a class="button button-primary" href="tel:+17474886300">Call (747) 488-6300</a>
+      </section>
+
+      <section id="paidPanel" class="panel" hidden>
+        <div class="success-mark">✓</div>
+        <p class="eyebrow">Payment confirmed</p>
+        <h1>Your reservation is confirmed.</h1>
+        <p>Booking <strong id="paidReference"></strong> has already received its approved payment. This link cannot be used to pay again.</p>
+        <div class="payment-total" id="paidAmount"></div>
+        <p>Remaining trip balance: <strong id="paidRemaining"></strong>.</p>
+      </section>
+
+      <section id="zellePendingPanel" class="panel" hidden>
+        <p class="eyebrow">Awaiting bank verification</p>
+        <h1>Your Zelle transfer is not confirmed yet.</h1>
+        <p>Booking <strong id="zellePendingReference"></strong> is waiting for Davtian Grigor LLC to verify the transfer in the business bank account.</p>
+        <div class="payment-total" id="zellePendingAmount"></div>
+        <p>No automatic payment confirmation is provided by this QR code. You will receive confirmation after the owner checks the bank.</p>
+      </section>
+
+      <div id="checkout" hidden>
+        <section class="panel">
+          <p class="eyebrow">Owner approved</p>
+          <h1>Complete your reservation.</h1>
+          <p>The trip and final total below were approved by Davtian Grigor LLC. Choose only one of the payment amounts authorized for this booking.</p>
+          <div class="summary-list">
+            <div class="summary-row"><span>Booking</span><strong id="reference"></strong></div>
+            <div class="summary-row"><span>Vehicle</span><strong>2025 BMW X5</strong></div>
+            <div class="summary-row"><span>Pickup</span><strong id="pickup"></strong></div>
+            <div class="summary-row"><span>Destination</span><strong id="destination"></strong></div>
+            <div class="summary-row"><span>Date & time</span><strong id="dateTime"></strong></div>
+            <div class="summary-row"><span>Distance</span><strong id="distance"></strong></div>
+          </div>
+          <p class="eyebrow payment-label">Approved total</p>
+          <div class="payment-total" id="total"></div>
+        </section>
+
+        <section class="panel">
+          <p class="eyebrow">Customer details</p>
+          <h2>Who is traveling?</h2>
+          <form id="paymentForm" class="form-grid" novalidate>
+            <div class="field"><label for="firstName">First name</label><input id="firstName" autocomplete="given-name" required></div>
+            <div class="field"><label for="lastName">Last name</label><input id="lastName" autocomplete="family-name" required></div>
+            <fieldset class="payment-options full">
+              <legend>Choose an approved payment amount</legend>
+              <div id="paymentOptions"></div>
+            </fieldset>
+            <label class="terms-check full"><input id="termsAccepted" type="checkbox" required><span>I accept the <a href="/#terms" target="_blank" rel="noopener">booking, cancellation, and refund terms</a> and authorize only the amount I selected above.</span></label>
+            <div class="payment-methods full" role="group" aria-label="Payment method">
+              <button class="payment-method active" id="squareMethod" type="button">Square · Card</button>
+              <button class="payment-method" id="zelleMethod" type="button">Zelle · Business transfer</button>
+            </div>
+            <div class="full" id="squarePanel">
+              <p class="eyebrow">Credit or debit card through Square</p>
+              <div id="card-container" aria-label="Secure Square card form"></div>
+              <p class="secure-note">🔒 Card details are handled directly by Square. This website never receives or stores the full card number, expiration date, or CVV.</p>
+              <button class="button button-primary full" id="payButton" type="button" disabled>Loading secure payment…</button>
+            </div>
+            <div class="full zelle-panel" id="zellePanel" hidden>
+              <p class="eyebrow">Zelle business account</p>
+              <h3>DAVTIAN GRIGOR LLC</h3>
+              <p>Send the selected amount to Zelle phone number <strong>818-877-9878</strong>. Include booking <strong id="zelleReference"></strong> in the memo when possible.</p>
+              <canvas id="zelleQrCanvas" width="825" height="1297" aria-label="Zelle QR code for Davtian Grigor LLC"></canvas>
+              <div class="zelle-actions">
+                <button class="button button-secondary" id="saveZelleQr" type="button">Save Zelle QR code</button>
+                <a class="button button-quiet" href="tel:18188779878">Zelle phone: 818-877-9878</a>
+              </div>
+              <p class="warning-box"><strong>Important:</strong> The QR code does not confirm payment automatically. Your booking remains awaiting verification until the owner personally checks the bank deposit.</p>
+              <button class="button button-primary full" id="zelleSentButton" type="button">I sent the Zelle transfer</button>
+            </div>
+            <p class="status-message full" id="paymentStatus" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+
+      <section id="successPanel" class="panel" hidden>
+        <div class="success-mark">✓</div>
+        <p class="eyebrow">Payment confirmed</p>
+        <h1>Your reservation is confirmed.</h1>
+        <p>Your booking number is <strong id="successReference"></strong>.</p>
+        <p>Amount paid: <strong id="successAmount"></strong>.</p>
+        <p>Remaining trip balance: <strong id="successRemaining"></strong>.</p>
+        <p>A confirmation was sent to the email used for the original request.</p>
+        <a class="button button-secondary" id="receiptLink" href="#" target="_blank" rel="noopener" hidden>View Square receipt</a>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
