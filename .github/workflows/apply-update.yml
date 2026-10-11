@@ -1,0 +1,28 @@
+name: Apply prepared website update
+
+on:
+  push:
+    branches:
+      - complete-booking-zelle
+
+permissions:
+  contents: write
+
+jobs:
+  apply-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out update branch
+        uses: actions/checkout@v4
+      - name: Apply prepared source tree
+        run: |
+          tar -xzf davtian-site-update.tgz
+          rm davtian-site-update.tgz
+          rm .github/workflows/apply-update.yml
+      - name: Commit prepared update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Complete approval, payment, and Zelle booking flow"
+          git push
