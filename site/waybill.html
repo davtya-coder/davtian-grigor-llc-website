@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Electronic Waybill | Davtian Grigor LLC</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/waybill.js" defer></script>
+</head>
+<body>
+  <main class="page-shell">
+    <div class="narrow">
+      <section class="panel">
+        <div class="admin-top">
+          <div><p class="eyebrow">CPUC General Order 157-E §3.01</p><h1>Electronic waybill</h1></div>
+          <div class="admin-actions"><button class="button button-primary compact" id="printButton" type="button">Print / save PDF</button><a class="button button-secondary compact" href="/admin.html">Dashboard</a></div>
+        </div>
+        <p id="waybillWarning" class="warning-box" hidden></p>
+        <div class="waybill-grid" id="waybillGrid" hidden>
+          <div>Booking reference</div><div id="reference"></div>
+          <div>1. Carrier and TCP number</div><div id="carrier"></div>
+          <div>2. Vehicle license plate</div><div id="plate"></div>
+          <div>3. Driver name</div><div id="driver"></div>
+          <div>4. Person requesting / arranging charter</div><div id="customer"></div>
+          <div>5. Date and time arranged</div><div id="arrangedAt"></div>
+          <div>6. Booking method</div><div id="method"></div>
+          <div>7. Number in charter group</div><div id="passengers"></div>
+          <div>8. At least one passenger</div><div id="passengerName"></div>
+          <div>9. Origin and destination</div><div id="route"></div>
+          <div>Scheduled pickup</div><div id="pickupTime"></div>
+          <div>Vehicle</div><div>2025 BMW X5</div>
+          <div>Booking status</div><div id="status"></div>
+          <div>Payment confirmation</div><div id="payment"></div>
+        </div>
+        <p class="fine-print">This record is generated from the private booking system. The owner must verify completeness and accuracy before the trip.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

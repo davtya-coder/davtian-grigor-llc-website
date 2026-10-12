@@ -3,9 +3,24 @@
   "name": "davtian-grigor-llc-website",
   "main": "worker/index.js",
   "compatibility_date": "2026-10-09",
+  "keep_vars": true,
   "assets": {
     "directory": "./site",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
-  }
+    "run_worker_first": ["/api/*", "/admin/*"]
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "BOOKING_STORE",
+        "class_name": "BookingStore"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "booking-store-v1-20261011",
+      "new_sqlite_classes": ["BookingStore"]
+    }
+  ]
 }
