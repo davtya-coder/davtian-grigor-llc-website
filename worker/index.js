@@ -43,6 +43,19 @@ function requireDatabase(env) {
   if (!env.DB) throw new Error("DATABASE_NOT_CONFIGURED");
 }
 
+async function withSigningSecret(env) {
+  if (env.SESSION_SECRET || !env.DB) return env;
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS system_secrets (name TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
+  let row = await env.DB.prepare("SELECT value FROM system_secrets WHERE name = 'session-signing-key'").first();
+  if (!row) {
+    await env.DB.prepare("INSERT OR IGNORE INTO system_secrets (name, value) VALUES ('session-signing-key', ?)").bind(randomToken(48)).run();
+    row = await env.DB.prepare("SELECT value FROM system_secrets WHERE name = 'session-signing-key'").first();
+  }
+  const runtimeEnv = Object.create(env);
+  Object.defineProperty(runtimeEnv, "SESSION_SECRET", { value: row.value });
+  return runtimeEnv;
+}
+
 async function settings(env) {
   requireDatabase(env);
   const row = await env.DB.prepare("SELECT * FROM settings WHERE id = 1").first();
@@ -818,8 +831,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     try {
-      const runtimeEnv = withBookingDatabase(env);
-      if (url.pathname.startsWith("/api/")) return withSecurityHeaders(await handleApi(request, runtimeEnv, url));
+      let runtimeEnv = withBookingDatabase(env);
+      if (url.pathname.startsWith("/api/")) {
+        runtimeEnv = await withSigningSecret(runtimeEnv);
+        return withSecurityHeaders(await handleApi(request, runtimeEnv, url));
+      }
       if (url.pathname === "/admin" || url.pathname === "/admin/") return Response.redirect(`${url.origin}/admin.html`, 302);
       return withSecurityHeaders(await runtimeEnv.ASSETS.fetch(request));
     } catch (error) {

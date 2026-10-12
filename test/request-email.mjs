@@ -13,7 +13,7 @@ const mf = new Miniflare({
   workers: [{
     name: "request-email-test", scriptPath: "worker/index.js", modules: true,
     modulesRules: [{ type: "ESModule", include: ["**/*.js"] }], compatibilityDate: "2026-08-06",
-    bindings: { SESSION_SECRET: "test-request-session-secret-32-characters", GOOGLE_MAPS_API_KEY: "test-google-key", RESEND_API_KEY: "test-email-token", RESEND_FROM: "bookings@example.com" },
+    bindings: { GOOGLE_MAPS_API_KEY: "test-google-key", RESEND_API_KEY: "test-email-token", RESEND_FROM: "bookings@example.com" },
     durableObjects: { BOOKING_STORE: { className: "BookingStore", useSQLite: true } }, fetchMock,
   }],
 });

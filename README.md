@@ -30,7 +30,8 @@ Required encrypted Worker secrets:
 - `GOOGLE_MAPS_API_KEY`
 - `SQUARE_ACCESS_TOKEN`
 - `ADMIN_PASSWORD`
-- `SESSION_SECRET` (a long random value)
+
+`SESSION_SECRET` can optionally be supplied as a long random encrypted secret. If omitted, the Worker generates a cryptographically random signing key once and persists it in private booking storage. It is never returned to the browser or committed to Git. Quote validation and owner sessions reuse the same key across requests.
 
 The Google key stays server-side and should be API-restricted to the Google Routes API (and Places API if autocomplete is enabled). The Square token must be the production token matching application `sq0idp-mn4whAbG0YQAFvNlqwHRJw` and location `LWWHWQ4CTYKWG`.
 
@@ -53,3 +54,4 @@ npx wrangler deploy --dry-run
 ```
 
 The integration test covers request creation, owner approval, allowed payment amounts, Square idempotency, Zelle pending status, manual Zelle verification, and remaining balances.
+
