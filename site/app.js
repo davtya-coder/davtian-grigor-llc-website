@@ -21,8 +21,17 @@ const requestButton = $("#requestButton");
 const pickupDate = $("#pickupDate");
 const pickupTime = $("#pickupTime");
 let quoteToken = "";
+let emailAvailable = null;
+
+function updateEmailAvailability() {
+  if (emailAvailable !== false) return;
+  requestButton.disabled = true;
+  requestStatus.textContent = "Online requests are temporarily unavailable. Please email davtya@gmail.com with your trip details.";
+}
 
 api("/api/config").then(config => {
+  emailAvailable = config.services.emailReady;
+  updateEmailAvailability();
   const { baseFare, perMile, perMinute, minimumPrice } = config.pricing;
   $("#pricingFormula").textContent = `Estimate based on the actual Google Maps driving route, a ${rateMoney(baseFare)} base fare, ${rateMoney(perMile)} per mile, ${rateMoney(perMinute)} per minute and a ${rateMoney(minimumPrice)} minimum. Tolls, parking, airport fees, waiting time and major traffic changes are not included.`;
 }).catch(() => {});
@@ -55,6 +64,7 @@ function resetQuote() {
   requestStatus.className = "request-status";
   requestButton.disabled = false;
   requestButton.textContent = "Send ride request";
+  updateEmailAvailability();
 }
 
 ["#pickup", "#destination", "#pickupDate", "#pickupTime"].forEach(selector => {
@@ -86,6 +96,7 @@ routeForm.addEventListener("submit", async event => {
     $("#routeTime").textContent = `${result.durationMinutes} minutes`;
     $("#routePrice").textContent = money(result.estimatedPrice);
     routeResult.hidden = false;
+    updateEmailAvailability();
   } catch (error) {
     routeStatus.textContent = error.message || "Route could not be calculated. Please check both addresses.";
   } finally {
