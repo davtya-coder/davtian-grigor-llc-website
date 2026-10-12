@@ -245,6 +245,27 @@ async function audit(env, bookingId, eventType, actor, details = {}) {
     .bind(bookingId, eventType, actor, JSON.stringify(details)).run();
 }
 
+async function notifyBookingRequest(request, env, booking, status = 200) {
+  const sent = await env.DB.prepare("SELECT id FROM booking_events WHERE booking_id = ? AND event_type = 'OWNER_NOTIFIED' LIMIT 1")
+    .bind(booking.id).first();
+  if (sent) return json({ ok: true, reference: booking.reference, ownerNotified: true });
+  const notification = await notifyOwnerOfRequest(env, booking, new URL(request.url).origin, (await settings(env)).owner_email).catch(error => {
+    console.error("Owner notification failed", error);
+    return { sent: false, reason: "Email delivery failed." };
+  });
+  await audit(env, booking.id, notification.sent ? "OWNER_NOTIFIED" : "OWNER_NOTIFICATION_PENDING", "system", notification);
+  if (!notification.sent) {
+    return json({
+      ok: false,
+      reference: booking.reference,
+      requestSaved: true,
+      ownerNotified: false,
+      message: `Request ${booking.reference} is saved, but the email could not be sent. Please retry sending the email below.`,
+    }, 503);
+  }
+  return json({ ok: true, reference: booking.reference, ownerNotified: true }, status);
+}
+
 async function createBookingRequest(request, env) {
   requireDatabase(env);
   const input = await readJson(request);
@@ -254,8 +275,8 @@ async function createBookingRequest(request, env) {
   const contactType = "email";
   const contactValue = normalizeEmail(input.contactValue || input.email);
   if (!contactValue) return json({ ok: false, message: "Please enter a valid email address." }, 400);
-  const existing = await env.DB.prepare("SELECT reference FROM bookings WHERE quote_nonce = ?").bind(quote.nonce).first();
-  if (existing) return json({ ok: true, reference: existing.reference, message: "Your booking request has already been received." });
+  const existing = await env.DB.prepare("SELECT * FROM bookings WHERE quote_nonce = ?").bind(quote.nonce).first();
+  if (existing) return notifyBookingRequest(request, env, existing);
   let reference;
   let result;
   const ip = request.headers.get("cf-connecting-ip") || "";
@@ -280,9 +301,9 @@ async function createBookingRequest(request, env) {
       break;
     } catch (error) {
       if (String(error).includes("quote_nonce")) {
-        const duplicate = await env.DB.prepare("SELECT reference FROM bookings WHERE quote_nonce = ?").bind(quote.nonce).first();
+        const duplicate = await env.DB.prepare("SELECT * FROM bookings WHERE quote_nonce = ?").bind(quote.nonce).first();
         if (duplicate) {
-          return json({ ok: true, reference: duplicate.reference, message: "Your booking request has already been received." });
+          return notifyBookingRequest(request, env, duplicate);
         }
         throw error;
       }
@@ -291,17 +312,7 @@ async function createBookingRequest(request, env) {
   }
   const booking = await env.DB.prepare("SELECT * FROM bookings WHERE id = ?").bind(result.meta.last_row_id).first();
   await audit(env, booking.id, "REQUESTED", "customer", { contactType });
-  const notification = await notifyOwnerOfRequest(env, booking, new URL(request.url).origin, (await settings(env)).owner_email).catch(error => {
-    console.error("Owner notification failed", error);
-    return { sent: false, reason: "Email delivery failed." };
-  });
-  await audit(env, booking.id, notification.sent ? "OWNER_NOTIFIED" : "OWNER_NOTIFICATION_PENDING", "system", notification);
-  return json({
-    ok: true,
-    reference,
-    ownerNotified: notification.sent,
-    message: "Your booking request has been received. We will confirm availability shortly.",
-  }, 201);
+  return notifyBookingRequest(request, env, booking, 201);
 }
 
 async function reservationByToken(env, token) {
@@ -818,3 +829,4 @@ export default {
 };
 
 export const __test = { calculatePrice, containsAirport, validateTrip };
+

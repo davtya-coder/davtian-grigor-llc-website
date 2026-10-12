@@ -40,7 +40,11 @@ function pickupIso() {
 async function api(path, options) {
   const response = await fetch(path, options);
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.ok) throw new Error(result.message || "The service is temporarily unavailable.");
+  if (!response.ok || !result.ok) {
+    const error = new Error(result.message || "The service is temporarily unavailable.");
+    error.requestSaved = result.requestSaved === true;
+    throw error;
+  }
   return result;
 }
 
@@ -112,13 +116,13 @@ requestForm.addEventListener("submit", async event => {
         company: $("#company").value,
       }),
     });
-    requestStatus.textContent = `Request ${result.reference} was received. No payment was taken. We will email you after review.`;
+    requestStatus.textContent = `Request ${result.reference} sent. We will email you after review.`;
     requestStatus.className = "request-status success";
     requestButton.textContent = "Request sent";
   } catch (error) {
     requestStatus.textContent = error.message || "The request could not be sent. Please try again.";
     requestButton.disabled = false;
-    requestButton.textContent = "Send ride request";
+    requestButton.textContent = error.requestSaved ? "Retry sending email" : "Send ride request";
   }
 });
 
@@ -127,3 +131,4 @@ pickupDate.min = localDate(new Date());
 if (!pickupDate.value) pickupDate.value = localDate(now);
 if (!pickupTime.value) pickupTime.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 $("#year").textContent = new Date().getFullYear();
+

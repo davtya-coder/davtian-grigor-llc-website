@@ -1,6 +1,6 @@
 import { BUSINESS, escapeHtml, money } from "./lib.js";
 
-export async function sendEmail(env, { to, subject, html }) {
+export async function sendEmail(env, { to, subject, html, replyTo, idempotencyKey }) {
   if (!to) {
     return { sent: false, reason: "Email provider is not configured." };
   }
@@ -13,6 +13,7 @@ export async function sendEmail(env, { to, subject, html }) {
         from,
         subject,
         html,
+        ...(replyTo ? { replyTo } : {}),
         text: html.replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
       });
       return { sent: true, provider: "cloudflare" };
@@ -29,8 +30,9 @@ export async function sendEmail(env, { to, subject, html }) {
     headers: {
       authorization: `Bearer ${env.RESEND_API_KEY}`,
       "content-type": "application/json",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
-    body: JSON.stringify({ from: env.RESEND_FROM, to: [to], subject, html }),
+    body: JSON.stringify({ from: env.RESEND_FROM, to: [to], subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
   });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
@@ -77,6 +79,8 @@ export async function notifyOwnerOfRequest(env, booking, origin, configuredOwner
   return sendEmail(env, {
     to: ownerEmail,
     subject: `New booking request ${booking.reference}`,
+    replyTo: booking.contact_value,
+    idempotencyKey: `owner-request/${booking.reference}`,
     html: `<h2>New booking request</h2>${tripRows(booking)}
       <p><strong>Estimate:</strong> ${money(booking.estimated_price_cents)}</p>
       <p><strong>Customer contact:</strong> ${escapeHtml(booking.contact_value)}</p>
@@ -155,3 +159,4 @@ export async function sendPaymentConfirmations(env, booking, configuredOwnerEmai
   });
   return { customer, owner };
 }
+

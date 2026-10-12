@@ -6,10 +6,11 @@
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "check": "node --check worker/index.js && node --check worker/lib.js && node --check worker/notifications.js && node --check worker/storage.js && node --check site/app.js && node --check site/admin.js && node --check site/reserve.js && node --check site/waybill.js",
-    "test": "node test/logic.mjs && node test/integration.mjs"
+    "test": "node test/logic.mjs && node test/integration.mjs && node test/request-email.mjs"
   },
   "devDependencies": {
     "miniflare": "^4.20260730.0",
     "wrangler": "^4.45.0"
   }
 }
+

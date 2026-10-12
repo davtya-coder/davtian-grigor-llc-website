@@ -60,6 +60,10 @@ assert.equal((await notifyOwnerOfRequest(emailEnv, emailBooking, "https://exampl
 assert.equal(sentEmails[0].to[0], "davtya@gmail.com");
 assert.match(sentEmails[0].html, /16\.3 miles/);
 assert.match(sentEmails[0].html, /\$101\.00/);
+assert.equal(sentEmails[0].replyTo, "customer@example.com");
+for (const value of [emailBooking.pickup_address, emailBooking.destination_address, emailBooking.pickup_date, emailBooking.pickup_time]) {
+  assert.ok(sentEmails[0].html.includes(value), `owner email includes ${value}`);
+}
 assert.equal((await notifyCustomerApproved(emailEnv, emailBooking, "https://example.com/reserve.html?token=secret")).sent, true);
 assert.equal(sentEmails[1].to[0], "customer@example.com");
 await sendPaymentConfirmations(emailEnv, emailBooking, "davtya@gmail.com");
@@ -79,3 +83,4 @@ assert.ok(homePage.indexOf("Phone: (747) 488-6300") > homePage.indexOf("</main>"
 assert.doesNotMatch(homePage, /id="(?:fleet|services|terms|paymentModal)"/, "extra homepage sections are removed");
 
 console.log("Pricing, signed-token, and email composition tests passed.");
+

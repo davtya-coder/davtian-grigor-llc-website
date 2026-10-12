@@ -5,6 +5,7 @@ import { signPayload } from "../worker/lib.js";
 const secret = "integration-session-secret-32-characters";
 const fetchMock = createFetchMock();
 fetchMock.disableNetConnect();
+fetchMock.get("https://api.resend.com").intercept({ path: "/emails", method: "POST" }).reply(200, { id: "test-email" }).persist();
 fetchMock.get("https://connect.squareup.com").intercept({ path: "/v2/payments", method: "POST" }).reply(200, {
   payment: {
     id: "sq-payment-test-1",
@@ -20,7 +21,7 @@ const mf = new Miniflare({
     modules: true,
     modulesRules: [{ type: "ESModule", include: ["**/*.js"] }],
     compatibilityDate: "2026-08-06",
-    bindings: { SESSION_SECRET: secret, ADMIN_PASSWORD: "owner-test-password", SQUARE_ACCESS_TOKEN: "test-square-token" },
+    bindings: { SESSION_SECRET: secret, ADMIN_PASSWORD: "owner-test-password", SQUARE_ACCESS_TOKEN: "test-square-token", RESEND_API_KEY: "test-email-token", RESEND_FROM: "bookings@example.com" },
     fetchMock,
     durableObjects: { BOOKING_STORE: { className: "BookingStore", useSQLite: true } },
     serviceBindings: {
@@ -75,7 +76,7 @@ try {
   assert.equal(response.status, 201);
   const requestResult = await response.json();
   assert.match(requestResult.reference, /^DG-/);
-  assert.equal(requestResult.ownerNotified, false);
+  assert.equal(requestResult.ownerNotified, true);
 
   response = await mf.dispatchFetch("https://example.com/api/booking-requests", {
     method: "POST",
@@ -108,7 +109,7 @@ try {
   const approval = await response.json();
   assert.equal(approval.booking.status, "APPROVED");
   assert.equal(approval.booking.final_price_cents, 15500);
-  assert.equal(approval.notification.sent, false);
+  assert.equal(approval.notification.sent, true);
   const reservationUrl = new URL(approval.link);
 
   response = await mf.dispatchFetch(`https://example.com${reservationUrl.pathname}${reservationUrl.search}`.replace("/reserve.html", "/api/reservations/" + encodeURIComponent(reservationUrl.searchParams.get("token"))).replace("?token=" + encodeURIComponent(reservationUrl.searchParams.get("token")), ""));
@@ -240,3 +241,4 @@ try {
 } finally {
   await mf.dispose();
 }
+
