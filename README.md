@@ -21,14 +21,9 @@ The production defaults are:
 
 The estimate is rounded up to the next whole dollar. The owner can change all four values from `/admin.html` without changing source code. With the defaults, 16.3 miles and 46 minutes is $101.
 
-## Cloudflare resources
+## Cloudflare storage
 
-Create the D1 database once, copy its ID into `wrangler.jsonc`, and apply migrations:
-
-```sh
-npx wrangler d1 create davtian-bookings
-npx wrangler d1 migrations apply DB --remote
-```
+Bookings, tariff settings, approvals, payment state and the audit log use SQLite storage embedded in the existing Worker. Cloudflare provisions it from `wrangler.jsonc` during deployment. No separate database ID, new site or new Cloudflare project is required.
 
 Required encrypted Worker secrets:
 

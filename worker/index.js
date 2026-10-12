@@ -30,6 +30,9 @@ import {
   sendEmail,
   sendPaymentConfirmations,
 } from "./notifications.js";
+import { BookingStore, withBookingDatabase } from "./storage.js";
+
+export { BookingStore };
 
 const MAX_PRICE_CENTS = 5_000_000;
 const QUOTE_LIFETIME_SECONDS = 30 * 60;
@@ -804,9 +807,10 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     try {
-      if (url.pathname.startsWith("/api/")) return withSecurityHeaders(await handleApi(request, env, url));
+      const runtimeEnv = withBookingDatabase(env);
+      if (url.pathname.startsWith("/api/")) return withSecurityHeaders(await handleApi(request, runtimeEnv, url));
       if (url.pathname === "/admin" || url.pathname === "/admin/") return Response.redirect(`${url.origin}/admin.html`, 302);
-      return withSecurityHeaders(await env.ASSETS.fetch(request));
+      return withSecurityHeaders(await runtimeEnv.ASSETS.fetch(request));
     } catch (error) {
       return withSecurityHeaders(friendlyError(error));
     }

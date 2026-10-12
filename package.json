@@ -5,9 +5,7 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
-    "db:local": "wrangler d1 migrations apply DB --local",
-    "db:remote": "wrangler d1 migrations apply DB --remote",
-    "check": "node --check worker/index.js && node --check worker/lib.js && node --check worker/notifications.js && node --check site/app.js && node --check site/admin.js && node --check site/reserve.js && node --check site/waybill.js",
+    "check": "node --check worker/index.js && node --check worker/lib.js && node --check worker/notifications.js && node --check worker/storage.js && node --check site/app.js && node --check site/admin.js && node --check site/reserve.js && node --check site/waybill.js",
     "test": "node test/logic.mjs && node test/integration.mjs"
   },
   "devDependencies": {

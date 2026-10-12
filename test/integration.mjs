@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import { createFetchMock, Miniflare } from "miniflare";
 import { signPayload } from "../worker/lib.js";
 
@@ -23,7 +22,7 @@ const mf = new Miniflare({
     compatibilityDate: "2026-08-06",
     bindings: { SESSION_SECRET: secret, ADMIN_PASSWORD: "owner-test-password", SQUARE_ACCESS_TOKEN: "test-square-token" },
     fetchMock,
-    d1Databases: { DB: "booking-test" },
+    durableObjects: { BOOKING_STORE: { className: "BookingStore", useSQLite: true } },
     serviceBindings: {
       ASSETS: async () => new Response("asset response", { status: 200 }),
     },
@@ -31,12 +30,6 @@ const mf = new Miniflare({
 });
 
 try {
-  const db = await mf.getD1Database("DB");
-  const migration = await readFile("migrations/0001_booking_system.sql", "utf8");
-  for (const statement of migration.split(";").map((sql) => sql.trim()).filter(Boolean)) {
-    await db.prepare(statement).run();
-  }
-
   let response = await mf.dispatchFetch("https://example.com/api/config");
   assert.equal(response.status, 200);
   const config = await response.json();

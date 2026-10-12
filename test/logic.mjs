@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { __test } from "../worker/index.js";
 import { signPayload, verifyPayload } from "../worker/lib.js";
 import { notifyCustomerApproved, notifyOwnerOfRequest, sendPaymentConfirmations } from "../worker/notifications.js";
@@ -65,5 +66,16 @@ await sendPaymentConfirmations(emailEnv, emailBooking, "davtya@gmail.com");
 assert.equal(sentEmails.length, 4);
 assert.equal(sentEmails[2].to[0], "customer@example.com");
 assert.equal(sentEmails[3].to[0], "davtya@gmail.com");
+
+const homePage = await readFile("site/index.html", "utf8");
+const labels = [">From", ">To", ">Date", ">Time"];
+let previousLabel = -1;
+for (const label of labels) {
+  const position = homePage.indexOf(label);
+  assert.ok(position > previousLabel, `home page contains ${label.slice(1)} in the requested order`);
+  previousLabel = position;
+}
+assert.ok(homePage.indexOf("Phone: (747) 488-6300") > homePage.indexOf("</main>"), "phone number is below the booking page");
+assert.doesNotMatch(homePage, /id="(?:fleet|services|terms|paymentModal)"/, "extra homepage sections are removed");
 
 console.log("Pricing, signed-token, and email composition tests passed.");
