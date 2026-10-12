@@ -1,3 +1,5 @@
+import { composeSmsRequest, createSmsHref } from "./sms.js";
+
 const $ = selector => document.querySelector(selector);
 const money = value => new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,11 +24,15 @@ const pickupDate = $("#pickupDate");
 const pickupTime = $("#pickupTime");
 let quoteToken = "";
 let emailAvailable = null;
+let tripVersion = 0;
+let smsText = "";
+const smsButton = $("#smsRequestButton");
+const smsStatus = $("#smsStatus");
+const smsFallback = $("#smsText");
 
 function updateEmailAvailability() {
-  if (emailAvailable !== false) return;
-  requestButton.disabled = true;
-  requestStatus.textContent = "Online requests are temporarily unavailable. Please email davtya@gmail.com with your trip details.";
+  requestForm.hidden = emailAvailable !== true;
+  if (emailAvailable === false) requestButton.disabled = true;
 }
 
 api("/api/config").then(config => {
@@ -58,7 +64,12 @@ async function api(path, options) {
 }
 
 function resetQuote() {
+  tripVersion += 1;
   quoteToken = "";
+  smsText = "";
+  smsButton.removeAttribute("href");
+  smsStatus.textContent = "";
+  smsFallback.hidden = true;
   routeResult.hidden = true;
   requestStatus.textContent = "";
   requestStatus.className = "request-status";
@@ -79,19 +90,25 @@ routeForm.addEventListener("submit", async event => {
   routeStatus.textContent = "";
   routeResult.hidden = true;
   quoteToken = "";
+  const version = tripVersion;
+  const trip = {
+    pickupAddress: $("#pickup").value.trim(),
+    destinationAddress: $("#destination").value.trim(),
+    pickupDate: pickupDate.value,
+    pickupTime: pickupTime.value,
+    pickupAtIso: pickupIso(),
+  };
   try {
     const result = await api("/api/quote", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        pickupAddress: $("#pickup").value.trim(),
-        destinationAddress: $("#destination").value.trim(),
-        pickupDate: pickupDate.value,
-        pickupTime: pickupTime.value,
-        pickupAtIso: pickupIso(),
-      }),
+      body: JSON.stringify(trip),
     });
+    if (version !== tripVersion) return;
     quoteToken = result.quoteToken;
+    smsText = composeSmsRequest(trip, result.estimatedPrice);
+    smsButton.href = createSmsHref(smsText, navigator);
+    smsFallback.value = smsText;
     $("#routeDistance").textContent = `${Number(result.distanceMiles).toFixed(1)} miles`;
     $("#routeTime").textContent = `${result.durationMinutes} minutes`;
     $("#routePrice").textContent = money(result.estimatedPrice);
@@ -102,6 +119,27 @@ routeForm.addEventListener("submit", async event => {
   } finally {
     routeButton.disabled = false;
     routeButton.textContent = "Calculate route and price";
+  }
+});
+
+smsButton.addEventListener("click", event => {
+  if (!smsText) {
+    event.preventDefault();
+    return;
+  }
+  smsStatus.textContent = "Press Send in your messaging app to send the request. If the text is missing, copy the trip details below and paste them into the message.";
+});
+
+$("#copySmsButton").addEventListener("click", async () => {
+  if (!smsText) return;
+  try {
+    await navigator.clipboard.writeText(smsText);
+    smsStatus.textContent = "Trip details copied. Paste them into your message to (747) 488-6300 and press Send.";
+  } catch {
+    smsFallback.hidden = false;
+    smsFallback.focus();
+    smsFallback.select();
+    smsStatus.textContent = "Copy the selected trip details, paste them into your message and press Send.";
   }
 });
 

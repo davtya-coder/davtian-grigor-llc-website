@@ -132,6 +132,11 @@
       font-weight:900;
     }
     .btn:disabled { cursor:wait; opacity:.62; }
+    .sms-request { display:grid; gap:12px; }
+    .sms-request .btn { display:flex; align-items:center; justify-content:center; text-align:center; text-decoration:none; }
+    .copy-button { min-height:44px; border:1px solid var(--line); border-radius:12px; background:transparent; color:var(--muted); font:inherit; }
+    .sms-note { margin:0; color:var(--muted); font-size:.85rem; }
+    #smsText { width:100%; min-height:180px; padding:12px; box-sizing:border-box; background:var(--input); color:#fff; border:1px solid var(--line); border-radius:12px; font:inherit; }
     .route-status,.request-status {
       grid-column:1/-1;
       min-height:22px;
@@ -244,7 +249,14 @@
             <div class="route-stat"><span>Travel time</span><strong id="routeTime">—</strong></div>
           </div>
           <p class="estimate-note" id="pricingFormula">Estimate based on the Google Maps driving route and the configured tariff.</p>
-          <form class="request-form" id="requestForm">
+          <div class="request-form sms-request">
+            <a class="btn" id="smsRequestButton">Send request by SMS</a>
+            <p class="sms-note">Opens your messaging app. Check the trip details and press Send to request your ride. Your ride is confirmed after we reply.</p>
+            <button class="copy-button" id="copySmsButton" type="button">Copy trip details</button>
+            <p class="sms-note" id="smsStatus" role="status" aria-live="polite"></p>
+            <textarea id="smsText" aria-label="Trip details to copy" readonly hidden></textarea>
+          </div>
+          <form class="request-form" id="requestForm" hidden>
             <label>Email
               <input id="customerEmail" name="email" type="email" autocomplete="email" required placeholder="Your email address">
             </label>
@@ -270,6 +282,7 @@
     </div>
   </footer>
 
-  <script src="/app.js" defer></script>
+  <script src="/app.js" type="module"></script>
 </body>
 </html>
+
