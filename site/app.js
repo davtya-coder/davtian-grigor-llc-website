@@ -1,4 +1,5 @@
 import { composeSmsRequest, createSmsHref } from "./sms.js";
+import { initializeCheckout } from "./checkout.js";
 
 const $ = selector => document.querySelector(selector);
 const money = value => new Intl.NumberFormat("en-US", {
@@ -29,6 +30,7 @@ let smsText = "";
 const smsButton = $("#smsRequestButton");
 const smsStatus = $("#smsStatus");
 const smsFallback = $("#smsText");
+const checkout = initializeCheckout(api);
 
 function updateEmailAvailability() {
   requestForm.hidden = emailAvailable !== true;
@@ -36,6 +38,7 @@ function updateEmailAvailability() {
 }
 
 api("/api/config").then(config => {
+  checkout.configure(config);
   emailAvailable = config.services.emailReady;
   updateEmailAvailability();
   const { baseFare, perMile, perMinute, minimumPrice } = config.pricing;
@@ -53,17 +56,21 @@ function pickupIso() {
 }
 
 async function api(path, options) {
-  const response = await fetch(path, options);
+  let response;
+  try { response = await fetch(path, options); }
+  catch (error) { error.paymentUncertain = path.endsWith('/pay'); throw error; }
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result.ok) {
     const error = new Error(result.message || "The service is temporarily unavailable.");
     error.requestSaved = result.requestSaved === true;
+    error.paymentUncertain = result.paymentUncertain === true || (path.endsWith('/pay') && response.status >= 500);
     throw error;
   }
   return result;
 }
 
 function resetQuote() {
+  checkout.resetTrip();
   tripVersion += 1;
   quoteToken = "";
   smsText = "";
@@ -106,6 +113,7 @@ routeForm.addEventListener("submit", async event => {
     });
     if (version !== tripVersion) return;
     quoteToken = result.quoteToken;
+    checkout.setTrip({ quoteToken, ...trip, estimatedPrice: result.estimatedPrice });
     smsText = composeSmsRequest(trip, result.estimatedPrice);
     smsButton.href = createSmsHref(smsText, navigator);
     smsFallback.value = smsText;

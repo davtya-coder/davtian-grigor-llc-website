@@ -137,6 +137,20 @@
     .copy-button { min-height:44px; border:1px solid var(--line); border-radius:12px; background:transparent; color:var(--muted); font:inherit; }
     .sms-note { margin:0; color:var(--muted); font-size:.85rem; }
     #smsText { width:100%; min-height:180px; padding:12px; box-sizing:border-box; background:var(--input); color:#fff; border:1px solid var(--line); border-radius:12px; font:inherit; }
+    .payment-panel { margin-top:24px; scroll-margin-top:18px; }
+    .payment-panel h2 { margin:0 0 10px; font-size:1.7rem; }
+    .agreement-note { margin:0 0 20px; color:var(--muted); line-height:1.6; }
+    .confirmation-check { display:flex; gap:12px; align-items:flex-start; font-size:.92rem; font-weight:500; line-height:1.5; }
+    .confirmation-check input { width:20px; min-height:20px; margin-top:3px; flex:none; accent-color:var(--gold); }
+    .payment-methods { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .method-button { min-height:50px; padding:10px; border:1px solid var(--line); border-radius:12px; background:var(--input); color:#fff; font:inherit; font-weight:800; }
+    .method-button.active { border-color:var(--gold); background:var(--gold); color:#111; }
+    .payment-panel .btn { width:100%; }
+    .payment-notice { margin:8px 0; color:var(--danger); line-height:1.5; }
+    .payment-notice.success,.payment-success { color:var(--ok); }
+    .payment-note { margin:12px 0; color:var(--muted); font-size:.85rem; line-height:1.5; }
+    #inlineZelleQr { display:block; width:230px; max-width:100%; height:auto; margin:16px auto; background:#f6f3ef; border-radius:12px; }
+    #bookingTerms { margin-top:18px; font-size:.85rem; color:var(--muted); line-height:1.6; }
     .route-status,.request-status {
       grid-column:1/-1;
       min-height:22px;
@@ -252,6 +266,7 @@
           <div class="request-form sms-request">
             <a class="btn" id="smsRequestButton">Send request by SMS</a>
             <p class="sms-note">Opens your messaging app. Check the trip details and press Send to request your ride. Your ride is confirmed after we reply.</p>
+            <p class="sms-note">The price is an estimate. You can discuss a different price with Grigor by SMS. Pay below only after he confirms the pickup time and amount.</p>
             <button class="copy-button" id="copySmsButton" type="button">Copy trip details</button>
             <p class="sms-note" id="smsStatus" role="status" aria-live="polite"></p>
             <textarea id="smsText" aria-label="Trip details to copy" readonly hidden></textarea>
@@ -267,6 +282,46 @@
             <p class="request-status" id="requestStatus" role="status" aria-live="polite"></p>
           </form>
         </section>
+      </section>
+      <section class="booking-panel payment-panel" id="paymentSection" aria-label="Payment after SMS agreement">
+        <h2>Pay after SMS confirmation</h2>
+        <p class="agreement-note">First receive Grigor's SMS confirmation of your pickup time and price. Then enter the amount you agreed on and pay by card or Zelle. For example, if the estimate is $100 and Grigor agrees to $80, enter $80 below.</p>
+        <form id="smsPaymentForm" novalidate>
+          <label>First name<input id="payFirstName" autocomplete="given-name" required></label>
+          <label>Last name<input id="payLastName" autocomplete="family-name" required></label>
+          <label>Phone number<input id="payPhone" type="tel" autocomplete="tel" required placeholder="Your mobile number"></label>
+          <label>Email (optional receipt)<input id="payEmail" type="email" autocomplete="email" placeholder="Optional"></label>
+          <label class="full">Amount agreed by SMS (USD)<input id="agreedAmount" type="number" inputmode="decimal" min="10" max="50000" step="0.01" required placeholder="Enter the agreed amount"></label>
+          <label class="confirmation-check full"><input id="smsConfirmed" type="checkbox" required><span>Grigor confirmed the pickup time and this payment amount with me by SMS.</span></label>
+          <label class="confirmation-check full"><input id="inlineTermsAccepted" type="checkbox" required><span>I authorize only the amount entered above and accept the <a href="#bookingTerms">booking and cancellation terms</a>.</span></label>
+          <div class="payment-methods full" role="group" aria-label="Choose payment method">
+            <button id="inlineCardMethod" class="method-button active" type="button">Credit / debit card</button>
+            <button id="inlineZelleMethod" class="method-button" type="button">Zelle</button>
+          </div>
+          <div class="full" id="inlineSquarePanel">
+            <p class="payment-note">Enter your card number, expiration date, security code and the cardholder's billing ZIP code.</p>
+            <p class="payment-note" id="inlineCardLoading">Loading secure card fields…</p>
+            <div id="inlineCardContainer" aria-label="Secure card number and billing ZIP fields"></div>
+            <p class="payment-note">Card details are handled securely by Square. This site does not receive or store your full card number or security code.</p>
+            <button class="btn" type="button" id="inlinePayButton" disabled>Pay by card</button>
+          </div>
+          <div class="full" id="inlineZellePanel" hidden>
+            <p>Send <strong id="zelleAgreedAmount">$0.00</strong> to <strong>DAVTIAN GRIGOR LLC</strong>.</p>
+            <p>Zelle phone: <strong>818-877-9878</strong>. Use your name, pickup date and time in the transfer memo.</p>
+            <canvas id="inlineZelleQr" width="330" height="519" aria-label="Davtian Grigor LLC Zelle QR code"></canvas>
+            <p class="payment-note">Open Zelle in your bank's app and send the agreed amount. Grigor will check the bank before confirming receipt.</p>
+            <button class="btn" type="button" id="inlineZelleSent" disabled>I sent the Zelle transfer</button>
+          </div>
+          <p class="payment-notice full" id="inlinePaymentStatus" role="status" aria-live="polite"></p>
+          <p class="payment-note full">Payment reference: <strong id="inlineReference">—</strong></p>
+        </form>
+        <p class="payment-success" id="inlinePaymentDone" role="status" hidden></p>
+        <a id="inlineReceipt" href="#" target="_blank" rel="noopener" hidden>View Square receipt</a>
+        <button id="inlineCheckPayment" class="copy-button" type="button" hidden>Check payment status</button>
+        <details id="bookingTerms"><summary>Booking and cancellation terms</summary>
+          <p>Confirm your trip and price with Grigor by SMS before paying. Payments do not change the agreed pickup time or automatically add further charges.</p>
+          <p>Cancel at least 24 hours before pickup for a refund of the amount paid. Payments for cancellations within 24 hours or no-shows may be non-refundable. Any remaining balance or additional charge must be agreed with Grigor.</p>
+        </details>
       </section>
     </div>
   </main>

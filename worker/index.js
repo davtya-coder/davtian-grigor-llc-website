@@ -31,6 +31,7 @@ import {
   sendPaymentConfirmations,
 } from "./notifications.js";
 import { BookingStore, withBookingDatabase } from "./storage.js";
+import { agreedAmountCents, createSmsCheckout, SMS_ARRANGEMENT } from "./sms-checkout.js";
 
 export { BookingStore };
 
@@ -380,6 +381,7 @@ function reservationPublic(row) {
     paymentStatus: row.payment_status,
     zellePending: Boolean(row.payment_method === "ZELLE" && row.zelle_submitted_at && !row.zelle_verified_at),
     termsVersion: BUSINESS.termsVersion,
+    arrangementMethod: row.arrangement_method,
   };
 }
 
@@ -389,6 +391,24 @@ async function getReservation(env, token) {
   if (!row) return json({ ok: false, message: "This reservation link is invalid." }, 404);
   if (row.approval_token_expires_at && Date.parse(row.approval_token_expires_at) < Date.now() && row.status !== "CONFIRMED") {
     return json({ ok: false, message: "This reservation link expired. Please contact Davtian Grigor LLC." }, 410);
+  }
+  if (row.status === "PAYMENT_PROCESSING" && row.payment_id && squareAccessToken(env)) {
+    try {
+      const response = await fetch(`https://connect.squareup.com/v2/payments/${encodeURIComponent(row.payment_id)}`, {
+        headers: { authorization: `Bearer ${squareAccessToken(env)}`, accept: "application/json" },
+        signal: AbortSignal.timeout(15_000),
+      });
+      const result = await response.json();
+      const payment = result.payment;
+      if (response.ok && payment?.status === "COMPLETED" && Number(payment.amount_money?.amount) === Number(row.payment_requested_amount_cents) && payment.amount_money?.currency === "USD") {
+        await env.DB.prepare("UPDATE bookings SET status = 'CONFIRMED', payment_status = 'COMPLETED', payment_amount_cents = ?, payment_receipt_url = ?, paid_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'PAYMENT_PROCESSING'")
+          .bind(Number(payment.amount_money.amount), payment.receipt_url || null, row.id).run();
+        await audit(env, row.id, "SQUARE_PAYMENT_CONFIRMED", "system", { paymentId: payment.id });
+        row = await reservationByToken(env, token);
+      }
+    } catch {
+      // Preserve the processing state until Square confirms the payment.
+    }
   }
   return json({
     ok: true,
@@ -426,7 +446,15 @@ async function chargeApprovedReservation(request, env, token) {
   if (row.payment_requested_amount_cents && Number(row.payment_requested_amount_cents) !== paymentAmountCents) {
     return json({ ok: false, message: "For payment safety, retry the same approved amount you selected previously." }, 409);
   }
-  const email = normalizeEmail(row.contact_value);
+  if (row.arrangement_method === SMS_ARRANGEMENT && agreedAmountCents(input.expectedAmount) !== paymentAmountCents) {
+    return json({ ok: false, message: "The agreed amount changed. Please review it before paying." }, 409);
+  }
+  const email = normalizeEmail(row.email || row.contact_value);
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS private_square_attempts (booking_id INTEGER PRIMARY KEY, idempotency_key TEXT NOT NULL, request_json TEXT NOT NULL)").run();
+  const previousAttempt = await env.DB.prepare("SELECT * FROM private_square_attempts WHERE booking_id = ?").bind(row.id).first();
+  if (row.payment_idempotency_key && !previousAttempt) {
+    return json({ ok: false, message: "A previous payment attempt needs to be checked. Please contact Grigor before paying again." }, 409);
+  }
   const lock = randomToken(12);
   const idempotencyKey = row.payment_idempotency_key || `dg-${row.id}-${paymentAmountCents}-${randomToken(8)}`.slice(0, 45);
   const lockResult = await env.DB.prepare(`
@@ -441,16 +469,20 @@ async function chargeApprovedReservation(request, env, token) {
   ).run();
   if (lockResult.meta.changes !== 1) return json({ ok: false, message: "Payment is already being processed. Please wait before trying again." }, 409);
   await audit(env, row.id, "SQUARE_PAYMENT_STARTED", "customer", { paymentOption, paymentAmountCents });
-  const paymentBody = {
+  const paymentBody = previousAttempt ? JSON.parse(previousAttempt.request_json) : {
     source_id: sourceId,
     idempotency_key: idempotencyKey,
     amount_money: { amount: paymentAmountCents, currency: "USD" },
     location_id: BUSINESS.squareLocationId,
     autocomplete: true,
-    buyer_email_address: email,
+    ...(email ? { buyer_email_address: email } : {}),
     reference_id: row.reference.slice(0, 40),
     note: `${BUSINESS.vehicle} | ${row.pickup_date} ${row.pickup_time} | ${row.pickup_address} to ${row.destination_address} | ${row.reference} | ${paymentOption} payment`.slice(0, 500),
   };
+  if (!previousAttempt) {
+    await env.DB.prepare("INSERT INTO private_square_attempts (booking_id, idempotency_key, request_json) VALUES (?, ?, ?)")
+      .bind(row.id, idempotencyKey, JSON.stringify(paymentBody)).run();
+  }
   let squareResponse;
   let squareResult;
   try {
@@ -458,6 +490,7 @@ async function chargeApprovedReservation(request, env, token) {
       method: "POST",
       headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json", accept: "application/json" },
       body: JSON.stringify(paymentBody),
+      signal: AbortSignal.timeout(20_000),
     });
     squareResult = await squareResponse.json().catch(() => ({}));
   } catch (error) {
@@ -467,12 +500,18 @@ async function chargeApprovedReservation(request, env, token) {
     return json({ ok: false, message: "Payment service is temporarily unavailable. Please try again." }, 502);
   }
   if (!squareResponse.ok || !squareResult.payment) {
+    if (squareResponse.status >= 500 || squareResponse.status === 429 || squareResponse.ok) {
+      await env.DB.prepare("UPDATE bookings SET status = 'APPROVED', payment_lock = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND payment_lock = ?")
+        .bind(row.id, lock).run();
+      return json({ ok: false, message: "Square has not confirmed the result. Retry the same payment amount; do not make a separate payment." }, 502);
+    }
     await env.DB.prepare(`
       UPDATE bookings SET status = 'APPROVED', payment_lock = NULL, payment_method = NULL,
         selected_payment_option = NULL, payment_requested_amount_cents = NULL, remaining_balance_cents = NULL,
         payment_idempotency_key = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND payment_lock = ?
     `)
       .bind(row.id, lock).run();
+    await env.DB.prepare("DELETE FROM private_square_attempts WHERE booking_id = ?").bind(row.id).run();
     const code = squareResult?.errors?.[0]?.code;
     const message = code === "CARD_DECLINED" ? "The card was declined. Please use another card." :
       code === "VERIFY_CVV_FAILURE" ? "Please check the security code and try again." :
@@ -482,6 +521,13 @@ async function chargeApprovedReservation(request, env, token) {
     return json({ ok: false, message }, 400);
   }
   const payment = squareResult.payment;
+  if (payment.status !== "COMPLETED" || Number(payment.amount_money?.amount) !== paymentAmountCents || payment.amount_money?.currency !== "USD") {
+    await env.DB.prepare("UPDATE bookings SET payment_id = ?, payment_status = ?, payment_lock = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND payment_lock = ?")
+      .bind(payment.id, payment.status || "UNKNOWN", row.id, lock).run();
+    await audit(env, row.id, "SQUARE_PAYMENT_AWAITING_COMPLETION", "system", { paymentId: payment.id, status: payment.status });
+    const pending = await env.DB.prepare("SELECT * FROM bookings WHERE id = ?").bind(row.id).first();
+    return json({ ok: true, paymentPending: true, reservation: reservationPublic(pending), paymentId: payment.id }, 202);
+  }
   await env.DB.prepare(`
     UPDATE bookings SET status = 'CONFIRMED', payment_id = ?, payment_status = ?, payment_amount_cents = ?,
       payment_receipt_url = ?, payment_lock = NULL, paid_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
@@ -514,13 +560,16 @@ async function submitZellePayment(request, env, token) {
   if (Date.parse(row.approval_token_expires_at) < Date.now()) return json({ ok: false, message: "This reservation link expired." }, 410);
   const paymentAmountCents = paymentAmountFor(row, paymentOption);
   if (!paymentAmountCents) return json({ ok: false, message: "Choose one of the payment amounts approved for this booking." }, 400);
+  if (row.arrangement_method === SMS_ARRANGEMENT && agreedAmountCents(input.expectedAmount) !== paymentAmountCents) {
+    return json({ ok: false, message: "The agreed amount changed. Please review it before sending Zelle." }, 409);
+  }
   const result = await env.DB.prepare(`
     UPDATE bookings SET first_name = ?, last_name = ?, email = ?, terms_version = ?, terms_accepted_at = CURRENT_TIMESTAMP,
       selected_payment_option = ?, payment_method = 'ZELLE', payment_requested_amount_cents = ?,
       remaining_balance_cents = ?, zelle_submitted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND status = 'APPROVED' AND payment_method IS NULL AND payment_id IS NULL
   `).bind(
-    firstName, lastName, normalizeEmail(row.contact_value), BUSINESS.termsVersion, paymentOption,
+    firstName, lastName, normalizeEmail(row.email || row.contact_value), BUSINESS.termsVersion, paymentOption,
     paymentAmountCents, Math.max(0, Number(row.final_price_cents) - paymentAmountCents), row.id,
   ).run();
   if (result.meta.changes !== 1) return json({ ok: false, message: "A payment method has already been selected for this booking." }, 409);
@@ -779,6 +828,7 @@ async function handleApi(request, env, url) {
   if (url.pathname === "/api/places/autocomplete" && request.method === "POST") return autocomplete(request, env);
   if (url.pathname === "/api/quote" && request.method === "POST") return createQuote(request, env);
   if (url.pathname === "/api/booking-requests" && request.method === "POST") return createBookingRequest(request, env);
+  if (url.pathname === "/api/sms-checkout" && request.method === "POST") return createSmsCheckout(request, env);
 
   const reservationMatch = url.pathname.match(/^\/api\/reservations\/([^/]+)(?:\/(pay|zelle))?$/);
   if (reservationMatch) {

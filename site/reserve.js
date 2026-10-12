@@ -211,6 +211,11 @@ $("#payButton").addEventListener("click", async () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ ...details, sourceId: tokenResult.token }),
     });
+    if (result.paymentPending || result.reservation.status !== "CONFIRMED") {
+      reservation = result.reservation;
+      status("Payment is still processing. Do not pay again; contact Grigor to check its status.", "error");
+      return;
+    }
     try { await squareCard.destroy(); } catch {}
     squareCard = null;
     reservation = result.reservation;
@@ -266,3 +271,4 @@ $("#saveZelleQr").addEventListener("click", () => {
 });
 
 load();
+
